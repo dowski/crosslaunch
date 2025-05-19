@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:macos_ui/macos_ui.dart';
@@ -44,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _pageIndex = 0;
   Directory? _docsDirectory;
+  Directory? _chosenDirectory;
 
   @override
   void initState() {
@@ -95,6 +97,19 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         Text('Home'),
                         if (_docsDirectory != null) Text(_docsDirectory!.path),
+                        MacosIconButton(
+                          icon: MacosIcon(CupertinoIcons.add),
+                          onPressed: () async {
+                            final result =
+                                await FilePicker.platform.getDirectoryPath();
+                            if (result != null) {
+                              setState(() {
+                                _chosenDirectory = Directory(result);
+                              });
+                            }
+                          },
+                        ),
+                        if (_chosenDirectory != null) Text(_chosenDirectory!.path),
                       ],
                     ),
                   );
