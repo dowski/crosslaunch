@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:crosslaunch/projects.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
 
 /// This method initializes macos_window_utils and styles the window.
 Future<void> _configureMacosWindowUtils() async {
@@ -19,8 +21,13 @@ Future<void> main() async {
       await _configureMacosWindowUtils();
     }
   }
+  final projects = AvailableProjects();
+  final providers = MultiProvider(providers: [
+    Provider.value(value: projects),
+    StreamProvider.value(value: projects.stream, initialData: projects.current),
+  ], child: const MyApp(),);
 
-  runApp(const MyApp());
+  runApp(providers);
 }
 
 class MyApp extends StatelessWidget {
@@ -46,8 +53,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _pageIndex = 0;
   Directory? _docsDirectory;
-  Directory? _chosenDirectory;
-  var _availableProjects = <Directory>[];
 
   @override
   void initState() {
@@ -64,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final projects = context.watch<List<Directory>>();
     return MacosWindow(
       sidebar: Sidebar(
         minWidth: 200,
@@ -78,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 label: Text('Home'),
                 leading: MacosIcon(CupertinoIcons.home),
               ),
-              for (final project in _availableProjects)
+              for (final project in projects)
                 SidebarItem(
                   label: Text(path.split(project.path).last),
                   leading: MacosIcon(CupertinoIcons.folder),
@@ -108,8 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             if (result != null) {
                               setState(() {
                                 final project = Directory(result);
-                                _chosenDirectory = project;
-                                _availableProjects.add(project);
+                                context.read<AvailableProjects>().add(project);
                               });
                             }
                           },
@@ -121,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-          for (final project in _availableProjects)
+          for (final project in projects)
             MacosScaffold(
               children: [
                 ContentArea(
