@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 /// This method initializes macos_window_utils and styles the window.
 Future<void> _configureMacosWindowUtils() async {
@@ -46,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _pageIndex = 0;
   Directory? _docsDirectory;
   Directory? _chosenDirectory;
+  var _availableProjects = <Directory>[];
 
   @override
   void initState() {
@@ -71,15 +73,16 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (index) {
               setState(() => _pageIndex = index);
             },
-            items: const [
+            items: [
               SidebarItem(
                 label: Text('Home'),
                 leading: MacosIcon(CupertinoIcons.home),
               ),
-              SidebarItem(
-                label: Text('Search'),
-                leading: MacosIcon(CupertinoIcons.search),
-              ),
+              for (final project in _availableProjects)
+                SidebarItem(
+                  label: Text(path.split(project.path).last),
+                  leading: MacosIcon(CupertinoIcons.folder),
+                ),
             ],
           );
         },
@@ -104,12 +107,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                 await FilePicker.platform.getDirectoryPath();
                             if (result != null) {
                               setState(() {
-                                _chosenDirectory = Directory(result);
+                                final project = Directory(result);
+                                _chosenDirectory = project;
+                                _availableProjects.add(project);
                               });
                             }
                           },
                         ),
-                        if (_chosenDirectory != null) Text(_chosenDirectory!.path),
                       ],
                     ),
                   );
@@ -117,15 +121,16 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-          MacosScaffold(
-            children: [
-              ContentArea(
-                builder: ((context, scrollController) {
-                  return const Center(child: Text('Explore'));
-                }),
-              ),
-            ],
-          ),
+          for (final project in _availableProjects)
+            MacosScaffold(
+              children: [
+                ContentArea(
+                  builder: ((context, scrollController) {
+                    return Center(child: Text(project.path));
+                  }),
+                ),
+              ],
+            ),
         ],
       ),
     );
