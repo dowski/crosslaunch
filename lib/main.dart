@@ -23,10 +23,16 @@ Future<void> main() async {
     }
   }
   final projects = AvailableProjects();
-  final providers = MultiProvider(providers: [
-    Provider.value(value: projects),
-    StreamProvider.value(value: projects.stream, initialData: projects.current),
-  ], child: const MyApp(),);
+  final providers = MultiProvider(
+    providers: [
+      Provider.value(value: projects),
+      StreamProvider.value(
+        value: projects.stream,
+        initialData: projects.current,
+      ),
+    ],
+    child: const MyApp(),
+  );
 
   runApp(providers);
 }
@@ -115,7 +121,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             if (result != null) {
                               setState(() {
                                 final projectKey = ProjectKey(result);
-                                context.read<AvailableProjects>().add(projectKey);
+                                context.read<AvailableProjects>().add(
+                                  projectKey,
+                                );
                               });
                             }
                           },
@@ -132,21 +140,28 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 ContentArea(
                   builder: ((context, scrollController) {
-                    return Center(child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(project.name),
-                        if (project.supportedPlatforms.isNotEmpty)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (project.supportedPlatforms.contains(SupportedPlatform.ios)) const Icon(Icons.apple),
-                              if (project.supportedPlatforms.contains(SupportedPlatform.android)) const Icon(Icons.android),
-                            ],
-                          ),
-
-                      ],
-                    ));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(project.name),
+                          if (project.supportedPlatforms.isNotEmpty)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (project.supportedPlatforms.contains(
+                                  SupportedPlatform.ios,
+                                ))
+                                  const Icon(Icons.apple),
+                                if (project.supportedPlatforms.contains(
+                                  SupportedPlatform.android,
+                                ))
+                                  const Icon(Icons.android),
+                              ],
+                            ),
+                        ],
+                      ),
+                    );
                   }),
                 ),
               ],
