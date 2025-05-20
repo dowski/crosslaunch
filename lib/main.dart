@@ -117,14 +117,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         MacosIconButton(
                           icon: MacosIcon(CupertinoIcons.add),
                           onPressed: () async {
-                            final result =
+                            final path =
                                 await FilePicker.platform.getDirectoryPath();
-                            if (result != null) {
+                            if (path != null) {
                               setState(() {
-                                final projectKey = ProjectKey(result);
-                                context.read<AvailableProjects>().add(
-                                  projectKey,
-                                );
+                                context.read<AvailableProjects>().add(path);
                               });
                             }
                           },

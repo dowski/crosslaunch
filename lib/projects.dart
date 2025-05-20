@@ -1,19 +1,22 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:file/file.dart';
+import 'package:file/local.dart';
 import 'package:path/path.dart' as path;
-
-typedef ProjectKey = Directory;
+import 'package:propertylistserialization/propertylistserialization.dart';
 
 final class AvailableProjects {
   final _current = <Project>[];
+  final FileSystem fileSystem;
+
+  AvailableProjects([this.fileSystem = const LocalFileSystem()]);
 
   List<Project> get current => _current;
   final _streamController = StreamController<List<Project>>.broadcast();
   Stream<List<Project>> get stream => _streamController.stream;
 
-  Future<void> add(ProjectKey key) async {
-    final project = await Project.fromKey(key);
+  Future<void> add(String path) async {
+    final project = await Project.fromDir(fileSystem.directory(path));
     _current.add(project);
     _streamController.add(_current);
   }
@@ -26,22 +29,43 @@ final class AvailableProjects {
 enum SupportedPlatform { ios, android }
 
 final class Project {
-  final ProjectKey directory;
+  final Directory directory;
   final String name;
   final Set<SupportedPlatform> supportedPlatforms;
+  final String? iosAppName;
 
-  Project(this.directory, {required this.supportedPlatforms})
+  Project(this.directory, {required this.supportedPlatforms, this.iosAppName})
     : name = path.split(directory.path).last;
 
-  static Future<Project> fromKey(ProjectKey directory) async {
+  static Future<Project> fromDir(Directory directory) async {
+    final supportedPlatforms = await _resolveSupportedPlatforms(directory);
+    String? iosAppName;
+    if (supportedPlatforms.contains(SupportedPlatform.ios)) {
+      try {
+        final plistFile = directory
+            .childDirectory('ios')
+            .childDirectory('Runner')
+            .childFile('Info.plist');
+        if (await plistFile.exists()) {
+          final result = await plistFile.readAsString();
+          final dict =
+              PropertyListSerialization.propertyListWithString(result)
+                  as Map<String, Object>;
+          iosAppName = dict['CFBundleDisplayName'] as String;
+        }
+      } on PropertyListReadStreamException catch (e) {
+        // handle error.
+      }
+    }
     return Project(
       directory,
-      supportedPlatforms: await _resolveSupportedPlatforms(directory),
+      supportedPlatforms: supportedPlatforms,
+      iosAppName: iosAppName,
     );
   }
 
   static Future<Set<SupportedPlatform>> _resolveSupportedPlatforms(
-    ProjectKey directory,
+    Directory directory,
   ) async {
     final supportedPlatforms = <SupportedPlatform>{};
     await for (final item in directory.list()) {
