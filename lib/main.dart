@@ -199,18 +199,16 @@ final class ProjectSettingsWidget extends StatelessWidget {
         ),
         SizedBox(height: 8),
         Container(height: 1, color: MacosColors.separatorColor),
-        if (project.supportedPlatforms.isNotEmpty) ...[
-          SizedBox(height: 8),
-          LinkedTextField(
-            label: "Identifier",
-            dataSource1: _StubTextDataSource(
-              description: PlatformLabel.android(label: 'Application ID'),
-            ),
-            dataSource2: _StubTextDataSource(
-              description: PlatformLabel.ios(label: 'Bundle ID'),
-            ),
+        SizedBox(height: 8),
+        LinkedTextField(
+          label: "Identifier",
+          dataSource1: _StubTextDataSource(
+            description: PlatformLabel.android(label: 'Application ID'),
           ),
-        ],
+          dataSource2: _StubTextDataSource(
+            description: PlatformLabel.ios(label: 'Bundle ID'),
+          ),
+        ),
       ],
     );
   }
