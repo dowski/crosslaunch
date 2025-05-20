@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 
 /// This method initializes macos_window_utils and styles the window.
@@ -152,11 +151,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                 if (project.supportedPlatforms.contains(
                                   SupportedPlatform.ios,
                                 ))
-                                  const Icon(Icons.apple),
+                                  const MacosIcon(Icons.apple),
                                 if (project.supportedPlatforms.contains(
                                   SupportedPlatform.android,
                                 ))
-                                  const Icon(Icons.android),
+                                  const MacosIcon(Icons.android),
                               ],
                             ),
                         ],
