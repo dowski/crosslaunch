@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   InvalidProject project => SidebarItem(
                     label: Text(project.name),
-                    leading: MacosIcon(CupertinoIcons.xmark),
+                    leading: MacosIcon(CupertinoIcons.xmark_octagon),
                   ),
                 },
             ],
