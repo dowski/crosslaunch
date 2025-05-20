@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:crosslaunch/linked_text_field.dart';
+import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -139,25 +141,61 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 ContentArea(
                   builder: ((context, scrollController) {
-                    return Center(
+                    final typography = MacosTypography.of(context);
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text(project.name),
-                          if (project.supportedPlatforms.isNotEmpty)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (project.supportedPlatforms.contains(
-                                  SupportedPlatform.ios,
-                                ))
-                                  const MacosIcon(Icons.apple),
-                                if (project.supportedPlatforms.contains(
-                                  SupportedPlatform.android,
-                                ))
-                                  const MacosIcon(Icons.android),
+                          Row(
+                            children: [
+                              Text(
+                                'Project Settings',
+                                style: typography.title1,
+                              ),
+                              if (project.supportedPlatforms.contains(
+                                SupportedPlatform.ios,
+                              )) ...[
+                                SizedBox(width: 4),
+                                MacosIcon(
+                                  Icons.apple,
+                                  color:
+                                      MacosColors.secondaryLabelColor.darkColor,
+                                ),
                               ],
+                              if (project.supportedPlatforms.contains(
+                                SupportedPlatform.android,
+                              )) ...[
+                                SizedBox(width: 4),
+                                MacosIcon(
+                                  Icons.android,
+                                  color:
+                                      MacosColors.secondaryLabelColor.darkColor,
+                                ),
+                              ],
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Container(
+                            height: 1,
+                            color: MacosColors.separatorColor,
+                          ),
+                          if (project.supportedPlatforms.isNotEmpty) ...[
+                            SizedBox(height: 8),
+                            LinkedTextField(
+                              label: "Identifier",
+                              dataSource1: _StubTextDataSource(
+                                description: PlatformLabel.android(
+                                  label: 'Application ID',
+                                ),
+                              ),
+                              dataSource2: _StubTextDataSource(
+                                description: PlatformLabel.ios(
+                                  label: 'Bundle ID',
+                                ),
+                              ),
                             ),
+                          ],
                         ],
                       ),
                     );
@@ -169,4 +207,14 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+}
+
+final class _StubTextDataSource implements TextDataSource {
+  @override
+  final Widget description;
+
+  _StubTextDataSource({required this.description});
+
+  @override
+  var text = '';
 }
