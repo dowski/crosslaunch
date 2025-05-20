@@ -4,6 +4,7 @@ import 'package:crosslaunch/projects.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -69,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final projects = context.watch<List<Directory>>();
+    final projects = context.watch<List<Project>>();
     return MacosWindow(
       sidebar: Sidebar(
         minWidth: 200,
@@ -86,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               for (final project in projects)
                 SidebarItem(
-                  label: Text(path.split(project.path).last),
+                  label: Text(project.name),
                   leading: MacosIcon(CupertinoIcons.folder),
                 ),
             ],
@@ -113,8 +114,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 await FilePicker.platform.getDirectoryPath();
                             if (result != null) {
                               setState(() {
-                                final project = Directory(result);
-                                context.read<AvailableProjects>().add(project);
+                                final projectKey = ProjectKey(result);
+                                context.read<AvailableProjects>().add(projectKey);
                               });
                             }
                           },
@@ -131,7 +132,21 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 ContentArea(
                   builder: ((context, scrollController) {
-                    return Center(child: Text(project.path));
+                    return Center(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(project.name),
+                        if (project.supportedPlatforms.isNotEmpty)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (project.supportedPlatforms.contains(SupportedPlatform.ios)) const Icon(Icons.apple),
+                              if (project.supportedPlatforms.contains(SupportedPlatform.android)) const Icon(Icons.android),
+                            ],
+                          ),
+
+                      ],
+                    ));
                   }),
                 ),
               ],
