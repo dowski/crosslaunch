@@ -1,6 +1,5 @@
 import 'package:crosslaunch/macos_ui.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
 import 'package:macos_ui/macos_ui.dart';
 
 final class LinkedTextField extends StatefulWidget {
