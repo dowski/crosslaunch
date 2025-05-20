@@ -9,9 +9,9 @@ void main() {
   setUp(() {
     fileSystem = MemoryFileSystem();
   });
-  
+
   group(Project, () {
-    test('no ios or android folder has no supported platforms', () async {
+    test('no ios or android folder is invalid', () async {
       final projectDir = fileSystem.directory('/foo/bar');
       await projectDir.create(recursive: true);
 
@@ -20,7 +20,7 @@ void main() {
       await webDir.create();
 
       final project = await Project.fromDir(projectDir);
-      expect(project.supportedPlatforms, isEmpty);
+      expect(project, isA<InvalidProject>());
     });
 
     test('ios folder leads to ios platform being present', () async {
@@ -29,7 +29,7 @@ void main() {
 
       await _createIosStructure(fileSystem);
 
-      final project = await Project.fromDir(projectDir);
+      final project = await Project.fromDir(projectDir) as ValidProject;
       expect(project.supportedPlatforms, contains(SupportedPlatform.ios));
     });
 
@@ -40,7 +40,7 @@ void main() {
       final androidDir = fileSystem.directory('/foo/bar/android');
       await androidDir.create();
 
-      final project = await Project.fromDir(projectDir);
+      final project = await Project.fromDir(projectDir) as ValidProject;
       expect(project.supportedPlatforms, contains(SupportedPlatform.android));
     });
 
@@ -54,7 +54,7 @@ void main() {
         await androidDir.create();
         await _createIosStructure(fileSystem);
 
-        final project = await Project.fromDir(projectDir);
+        final project = await Project.fromDir(projectDir) as ValidProject;
         expect(
           project.supportedPlatforms,
           containsAll([SupportedPlatform.android, SupportedPlatform.ios]),
@@ -68,8 +68,19 @@ void main() {
 
       await _createIosStructure(fileSystem);
 
-      final project = await Project.fromDir(projectDir);
+      final project = await Project.fromDir(projectDir) as ValidProject;
       expect(project.iosAppName, 'flutter_app');
+    });
+
+    test('ios project without Info.plist is invalid', () async {
+      final projectDir = fileSystem.directory('/foo/bar');
+      await projectDir.create(recursive: true);
+
+      final iosDir = fileSystem.directory('/foo/bar/ios/Runner');
+      await iosDir.create(recursive: true);
+
+      final project = await Project.fromDir(projectDir);
+      expect(project, isA<InvalidProject>());
     });
   });
 }

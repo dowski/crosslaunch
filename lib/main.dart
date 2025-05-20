@@ -93,10 +93,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 leading: MacosIcon(CupertinoIcons.home),
               ),
               for (final project in projects)
-                SidebarItem(
-                  label: Text(project.name),
-                  leading: MacosIcon(CupertinoIcons.folder),
-                ),
+                switch (project) {
+                  ValidProject project => SidebarItem(
+                    label: Text(project.name),
+                    leading: MacosIcon(CupertinoIcons.folder),
+                  ),
+                  InvalidProject project => SidebarItem(
+                    label: Text(project.name),
+                    leading: MacosIcon(CupertinoIcons.xmark),
+                  ),
+                },
             ],
           );
         },
@@ -138,63 +144,16 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 ContentArea(
                   builder: ((context, scrollController) {
-                    final typography = MacosTypography.of(context);
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Project Settings',
-                                style: typography.title1,
-                              ),
-                              if (project.supportedPlatforms.contains(
-                                SupportedPlatform.ios,
-                              )) ...[
-                                SizedBox(width: 4),
-                                MacosIcon(
-                                  Icons.apple,
-                                  color:
-                                      MacosColors.secondaryLabelColor.darkColor,
-                                ),
-                              ],
-                              if (project.supportedPlatforms.contains(
-                                SupportedPlatform.android,
-                              )) ...[
-                                SizedBox(width: 4),
-                                MacosIcon(
-                                  Icons.android,
-                                  color:
-                                      MacosColors.secondaryLabelColor.darkColor,
-                                ),
-                              ],
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            height: 1,
-                            color: MacosColors.separatorColor,
-                          ),
-                          if (project.supportedPlatforms.isNotEmpty) ...[
-                            SizedBox(height: 8),
-                            LinkedTextField(
-                              label: "Identifier",
-                              dataSource1: _StubTextDataSource(
-                                description: PlatformLabel.android(
-                                  label: 'Application ID',
-                                ),
-                              ),
-                              dataSource2: _StubTextDataSource(
-                                description: PlatformLabel.ios(
-                                  label: 'Bundle ID',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                      child: switch (project) {
+                        ValidProject project => ProjectSettingsWidget(
+                          project: project,
+                        ),
+                        InvalidProject project => Center(
+                          child: Text('Error loading ${project.path}'),
+                        ),
+                      },
                     );
                   }),
                 ),
@@ -202,6 +161,57 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
         ],
       ),
+    );
+  }
+}
+
+final class ProjectSettingsWidget extends StatelessWidget {
+  final ValidProject project;
+
+  const ProjectSettingsWidget({super.key, required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    final typography = MacosTypography.of(context);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Project Settings', style: typography.title1),
+            if (project.supportedPlatforms.contains(SupportedPlatform.ios)) ...[
+              SizedBox(width: 4),
+              MacosIcon(
+                Icons.apple,
+                color: MacosColors.secondaryLabelColor.darkColor,
+              ),
+            ],
+            if (project.supportedPlatforms.contains(
+              SupportedPlatform.android,
+            )) ...[
+              SizedBox(width: 4),
+              MacosIcon(
+                Icons.android,
+                color: MacosColors.secondaryLabelColor.darkColor,
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: 8),
+        Container(height: 1, color: MacosColors.separatorColor),
+        if (project.supportedPlatforms.isNotEmpty) ...[
+          SizedBox(height: 8),
+          LinkedTextField(
+            label: "Identifier",
+            dataSource1: _StubTextDataSource(
+              description: PlatformLabel.android(label: 'Application ID'),
+            ),
+            dataSource2: _StubTextDataSource(
+              description: PlatformLabel.ios(label: 'Bundle ID'),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

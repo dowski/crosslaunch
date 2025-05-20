@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:file/file.dart';
 import 'package:file/local.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as pathlib;
 import 'package:propertylistserialization/propertylistserialization.dart';
 
 final class AvailableProjects {
@@ -28,36 +28,46 @@ final class AvailableProjects {
 
 enum SupportedPlatform { ios, android }
 
-final class Project {
+sealed class Project {
+  String get name;
+  static Future<Project> fromDir(Directory directory) async {
+    try {
+      return await ValidProject._fromDir(directory);
+    } catch (e) {
+      return InvalidProject(directory.path);
+    }
+  }
+}
+
+final class ValidProject implements Project {
   final Directory directory;
+  @override
   final String name;
   final Set<SupportedPlatform> supportedPlatforms;
   final String? iosAppName;
 
-  Project(this.directory, {required this.supportedPlatforms, this.iosAppName})
-    : name = path.split(directory.path).last;
+  ValidProject(
+    this.directory, {
+    required this.supportedPlatforms,
+    this.iosAppName,
+  }) : name = pathlib.split(directory.path).last;
 
-  static Future<Project> fromDir(Directory directory) async {
+  static Future<ValidProject> _fromDir(Directory directory) async {
     final supportedPlatforms = await _resolveSupportedPlatforms(directory);
+    if (supportedPlatforms.isEmpty) throw Exception('No supported platforms');
     String? iosAppName;
     if (supportedPlatforms.contains(SupportedPlatform.ios)) {
-      try {
-        final plistFile = directory
-            .childDirectory('ios')
-            .childDirectory('Runner')
-            .childFile('Info.plist');
-        if (await plistFile.exists()) {
-          final result = await plistFile.readAsString();
-          final dict =
-              PropertyListSerialization.propertyListWithString(result)
-                  as Map<String, Object>;
-          iosAppName = dict['CFBundleDisplayName'] as String;
-        }
-      } on PropertyListReadStreamException catch (e) {
-        // handle error.
-      }
+      final plistFile = directory
+          .childDirectory('ios')
+          .childDirectory('Runner')
+          .childFile('Info.plist');
+      final result = await plistFile.readAsString();
+      final dict =
+          PropertyListSerialization.propertyListWithString(result)
+              as Map<String, Object>;
+      iosAppName = dict['CFBundleDisplayName'] as String;
     }
-    return Project(
+    return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
       iosAppName: iosAppName,
@@ -69,13 +79,21 @@ final class Project {
   ) async {
     final supportedPlatforms = <SupportedPlatform>{};
     await for (final item in directory.list()) {
-      if (item is Directory && path.split(item.path).last == 'ios') {
+      if (item is Directory && pathlib.split(item.path).last == 'ios') {
         supportedPlatforms.add(SupportedPlatform.ios);
       }
-      if (item is Directory && path.split(item.path).last == 'android') {
+      if (item is Directory && pathlib.split(item.path).last == 'android') {
         supportedPlatforms.add(SupportedPlatform.android);
       }
     }
     return supportedPlatforms;
   }
+}
+
+final class InvalidProject implements Project {
+  final String path;
+  @override
+  final String name;
+
+  InvalidProject(this.path) : name = pathlib.split(path).lastWhere((e) => e.trim().isNotEmpty);
 }
