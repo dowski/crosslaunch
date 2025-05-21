@@ -1,5 +1,6 @@
 import 'package:crosslaunch/macos_ui.dart';
 import 'package:crosslaunch/platform_label.dart';
+import 'package:crosslaunch/values.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
@@ -27,9 +28,9 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   @override
   void initState() {
     super.initState();
-    _controller1 = TextEditingController(text: widget.dataDescriptor1.dataSource.text);
-    _controller2 = TextEditingController(text: widget.dataDescriptor2.dataSource.text);
-    isExpanded = widget.dataDescriptor1.dataSource.text != widget.dataDescriptor2.dataSource.text;
+    _controller1 = TextEditingController(text: widget.dataDescriptor1.dataSource.value);
+    _controller2 = TextEditingController(text: widget.dataDescriptor2.dataSource.value);
+    isExpanded = widget.dataDescriptor1.dataSource.value != widget.dataDescriptor2.dataSource.value;
   }
 
   @override
@@ -102,13 +103,9 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
 
 final class DataDescriptor {
   final Widget label;
-  final TextDataSource dataSource;
+  final PlatformValue dataSource;
 
   DataDescriptor.android(String text, {required this.dataSource}) : label = PlatformLabel.android(label: text);
   DataDescriptor.ios(String text, {required this.dataSource}) : label = PlatformLabel.ios(label: text);
 }
 
-abstract interface class TextDataSource {
-  String get text;
-  set text(String value);
-}

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crosslaunch/values.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as pathlib;
@@ -27,8 +28,6 @@ final class AvailableProjects {
   }
 }
 
-enum SupportedPlatform { ios, android }
-
 sealed class Project {
   String get name;
   static Future<Project> fromDir(Directory directory) async {
@@ -45,45 +44,26 @@ final class ValidProject implements Project {
   @override
   final String name;
   final Set<SupportedPlatform> supportedPlatforms;
-  final String? iosAppName;
-  final String? androidAppName;
+  final List<(CommonProperty, CommonValue?)> attributes;
 
   ValidProject(
     this.directory, {
     required this.supportedPlatforms,
-    this.iosAppName,
-    this.androidAppName,
+    required this.attributes,
   }) : name = pathlib.split(directory.path).last;
 
   static Future<ValidProject> _fromDir(Directory directory) async {
     final supportedPlatforms = await _resolveSupportedPlatforms(directory);
     if (supportedPlatforms.isEmpty) throw Exception('No supported platforms');
-    String? iosAppName;
-    String? androidAppName;
-    if (supportedPlatforms.contains(SupportedPlatform.ios)) {
-      final plistFile = directory
-          .childDirectory('ios')
-          .childDirectory('Runner')
-          .childFile('Info.plist');
-      final result = await plistFile.readAsString();
-      final dict =
-          PropertyListSerialization.propertyListWithString(result)
-              as Map<String, Object>;
-      iosAppName = dict['CFBundleDisplayName'] as String;
-    }
-    if (supportedPlatforms.contains(SupportedPlatform.android)) {
-      final manifestFile = directory
-          .childDirectory('android')
-          .childFile('app/src/main/AndroidManifest.xml');
-      final manifestXml = await manifestFile.readAsString();
-      final manifest = XmlDocument.parse(manifestXml).firstElementChild;
-      androidAppName = manifest?.findElements('application').first.attributes.firstWhere((attr) => attr.name.qualified == 'android:label').value;
-    }
+    final properties = [CommonProperty.appName];
+    final values = await PropertyLoader(fileSystem: directory.fileSystem).load(properties, directory: directory, platforms: supportedPlatforms);
+    // Zip the properties and values together into an attributes list.
+    final attributes = List.generate(properties.length, (index) => (properties[index], values[index]));
+    
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
-      iosAppName: iosAppName,
-      androidAppName: androidAppName,
+      attributes: attributes,
     );
   }
 
