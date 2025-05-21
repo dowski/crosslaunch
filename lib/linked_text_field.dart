@@ -60,6 +60,7 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
                 if (isExpanded)
                   MacosTextField(
                     controller: _controller2,
+                    style: typography.subheadline,
                     prefix: isExpanded ? widget.dataDescriptor2.label : null,
                   ),
               ],
