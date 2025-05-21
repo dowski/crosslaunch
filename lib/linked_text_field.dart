@@ -1,17 +1,18 @@
 import 'package:crosslaunch/macos_ui.dart';
+import 'package:crosslaunch/platform_label.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
 final class LinkedTextField extends StatefulWidget {
   final String label;
-  final TextDataSource dataSource1;
-  final TextDataSource dataSource2;
+  final DataDescriptor dataDescriptor1;
+  final DataDescriptor dataDescriptor2;
 
   const LinkedTextField({
     super.key,
     required this.label,
-    required this.dataSource1,
-    required this.dataSource2,
+    required this.dataDescriptor1,
+    required this.dataDescriptor2,
   });
 
   @override
@@ -26,9 +27,9 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   @override
   void initState() {
     super.initState();
-    _controller1 = TextEditingController(text: widget.dataSource1.text);
-    _controller2 = TextEditingController(text: widget.dataSource2.text);
-    isExpanded = widget.dataSource1.text != widget.dataSource2.text;
+    _controller1 = TextEditingController(text: widget.dataDescriptor1.dataSource.text);
+    _controller2 = TextEditingController(text: widget.dataDescriptor2.dataSource.text);
+    isExpanded = widget.dataDescriptor1.dataSource.text != widget.dataDescriptor2.dataSource.text;
   }
 
   @override
@@ -54,12 +55,12 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
                 MacosTextField(
                   controller: _controller1,
                   style: typography.subheadline,
-                  prefix: isExpanded ? widget.dataSource1.description : null,
+                  prefix: isExpanded ? widget.dataDescriptor1.label : null,
                 ),
                 if (isExpanded)
                   MacosTextField(
                     controller: _controller2,
-                    prefix: isExpanded ? widget.dataSource2.description : null,
+                    prefix: isExpanded ? widget.dataDescriptor2.label : null,
                   ),
               ],
             ),
@@ -98,8 +99,15 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   }
 }
 
+final class DataDescriptor {
+  final Widget label;
+  final TextDataSource dataSource;
+
+  DataDescriptor.android(String text, {required this.dataSource}) : label = PlatformLabel.android(label: text);
+  DataDescriptor.ios(String text, {required this.dataSource}) : label = PlatformLabel.ios(label: text);
+}
+
 abstract interface class TextDataSource {
-  Widget get description;
   String get text;
   set text(String value);
 }

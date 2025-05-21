@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:crosslaunch/data_sources/project_name.dart';
 import 'package:crosslaunch/linked_text_field.dart';
-import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -202,24 +202,32 @@ final class ProjectSettingsWidget extends StatelessWidget {
         SizedBox(height: 8),
         LinkedTextField(
           label: "Identifier",
-          dataSource1: _StubTextDataSource(
-            description: PlatformLabel.android(label: 'Application ID'),
+          dataDescriptor1: DataDescriptor.android(
+            'Application ID',
+            dataSource: _StubTextDataSource(),
           ),
-          dataSource2: _StubTextDataSource(
-            description: PlatformLabel.ios(label: 'Bundle ID'),
+          dataDescriptor2: DataDescriptor.ios(
+            'Bundle ID',
+            dataSource: _StubTextDataSource(),
           ),
         ),
+        LinkedTextField(
+          label: "Name",
+          dataDescriptor1: DataDescriptor.android(
+            'android:label',
+            dataSource: AndroidProjectNameSource(project),
+          ),
+          dataDescriptor2: DataDescriptor.ios(
+            'Display Name',
+            dataSource: IOSProjectNameSource(project),
+          ),
+        )
       ],
     );
   }
 }
 
 final class _StubTextDataSource implements TextDataSource {
-  @override
-  final Widget description;
-
-  _StubTextDataSource({required this.description});
-
   @override
   var text = '';
 }

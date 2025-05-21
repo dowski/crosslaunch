@@ -4,6 +4,7 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as pathlib;
 import 'package:propertylistserialization/propertylistserialization.dart';
+import 'package:xml/xml.dart';
 
 final class AvailableProjects {
   final _current = <Project>[];
@@ -45,17 +46,20 @@ final class ValidProject implements Project {
   final String name;
   final Set<SupportedPlatform> supportedPlatforms;
   final String? iosAppName;
+  final String? androidAppName;
 
   ValidProject(
     this.directory, {
     required this.supportedPlatforms,
     this.iosAppName,
+    this.androidAppName,
   }) : name = pathlib.split(directory.path).last;
 
   static Future<ValidProject> _fromDir(Directory directory) async {
     final supportedPlatforms = await _resolveSupportedPlatforms(directory);
     if (supportedPlatforms.isEmpty) throw Exception('No supported platforms');
     String? iosAppName;
+    String? androidAppName;
     if (supportedPlatforms.contains(SupportedPlatform.ios)) {
       final plistFile = directory
           .childDirectory('ios')
@@ -67,10 +71,19 @@ final class ValidProject implements Project {
               as Map<String, Object>;
       iosAppName = dict['CFBundleDisplayName'] as String;
     }
+    if (supportedPlatforms.contains(SupportedPlatform.android)) {
+      final manifestFile = directory
+          .childDirectory('android')
+          .childFile('app/src/main/AndroidManifest.xml');
+      final manifestXml = await manifestFile.readAsString();
+      final manifest = XmlDocument.parse(manifestXml).firstElementChild;
+      androidAppName = manifest?.findElements('application').first.attributes.firstWhere((attr) => attr.name.qualified == 'android:label').value;
+    }
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
       iosAppName: iosAppName,
+      androidAppName: androidAppName,
     );
   }
 
