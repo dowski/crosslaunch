@@ -227,6 +227,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height: 16),
           LinkedTextField(
             label: 'App ID',
             dataDescriptor1: DataDescriptor.android(
