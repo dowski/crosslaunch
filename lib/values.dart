@@ -97,18 +97,22 @@ class IosStringProperty extends PlatformProperty {
 
 enum CommonProperty {
   appName(
+    displayName: 'App Name',
     androidProperty: AndroidStringProperty.label,
     iosProperty: IosStringProperty.displayName,
   ),
   appId(
+    displayName: 'App ID',
     androidProperty: AndroidStringProperty.packageId,
     iosProperty: IosStringProperty.bundleId,
   );
 
+  final String displayName;
   final AndroidStringProperty androidProperty;
   final IosStringProperty iosProperty;
 
   const CommonProperty({
+    required this.displayName,
     required this.androidProperty,
     required this.iosProperty,
   });

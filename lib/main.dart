@@ -202,7 +202,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
         SizedBox(height: 8),
         for (final (property, value) in project.attributes)
         LinkedTextField(
-          label: property.name,
+          label: property.displayName,
           dataDescriptor1: DataDescriptor.android(
             property.androidProperty.name,
             dataSource: value!.androidValue!,
