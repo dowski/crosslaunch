@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:crosslaunch/fs/access.dart';
-import 'package:crosslaunch/values.dart';
+import 'package:crosslaunch/platform.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as pathlib;

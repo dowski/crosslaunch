@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:crosslaunch/linked_text_field.dart';
+import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/projects.dart';
-import 'package:crosslaunch/values.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';

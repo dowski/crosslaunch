@@ -1,6 +1,6 @@
+import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:crosslaunch/testing/stub_data.dart';
-import 'package:crosslaunch/values.dart';
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:flutter_test/flutter_test.dart';
