@@ -39,9 +39,7 @@ dependencies:
   file_picker: ^10.1.9
   path: ^1.9.1
   provider: ^6.1.5
-  propertylistserialization: ^1.4.1
   file: ^7.0.1
-  xml: ^6.5.0
 
 dev_dependencies:
   flutter_test:

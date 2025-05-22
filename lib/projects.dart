@@ -4,8 +4,6 @@ import 'package:crosslaunch/values.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:path/path.dart' as pathlib;
-import 'package:propertylistserialization/propertylistserialization.dart';
-import 'package:xml/xml.dart';
 
 final class AvailableProjects {
   final _current = <Project>[];
