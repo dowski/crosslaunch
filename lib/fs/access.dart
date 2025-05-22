@@ -145,7 +145,7 @@ class IosInfoPlist {
 
 class IosXcodeProject {
   static final _bundleIdPattern = RegExp(
-    r'(PRODUCT_BUNDLE_IDENTIFIER\s*=\s*)([^;]+)(;)',
+    r'(PRODUCT_BUNDLE_IDENTIFIER\s*=\s*)(\w+(?:\.(?!RunnerTests)\w+)*)(\.RunnerTests;|;)',
   );
 
   final String _originalBundleId;

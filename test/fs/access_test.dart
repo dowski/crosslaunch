@@ -70,7 +70,17 @@ void main() {
           )
           .create(recursive: true);
       weirdInfoPlistFile.writeAsString(_infoPlistLeadingTrailingContent);
-    });
+
+      final weirdXcodeProjectFile = await fileSystem
+          .file(
+            pathlib.join(
+              weirdProject.path,
+              ConfigFile.iosXcodeProject.projectRelativePath,
+            ),
+          )
+          .create(recursive: true);
+      weirdXcodeProjectFile.writeAsString(_xcodeProjectSample);
+  });
 
     group(ConfigStore, () {
       test('loads AndroidManifest successfully', () async {
@@ -233,6 +243,31 @@ void main() {
           updatedXcodeProject.bundleId,
           'com.example.fancy_app',
         );
+      });
+
+      test('writing XcodeProject only touches correct fields', () async {
+        final configStore = ConfigStore(
+          appDirectory: weirdProject,
+          fileSystem: fileSystem,
+        );
+
+        final xcodeProject = await configStore.loadIosXcodeProject();
+
+        await configStore.saveIosXcodeProject(
+          xcodeProject.edit(bundleId: 'com.example.fancyApp'),
+        );
+
+        final weirdXcodeProjectXml =
+            await fileSystem
+                .file(
+                  pathlib.join(
+                    weirdProject.path,
+                    ConfigFile.iosXcodeProject.projectRelativePath,
+                  ),
+                )
+                .readAsString();
+
+        expect(weirdXcodeProjectXml, _xcodeProjectSampleUpdated);
       });
     });
   });
@@ -416,7 +451,7 @@ void main() {
         pbxproj: iosXcodeProjectSrc,
       );
 
-      expect(xcodeProject.bundleId, 'com.example.kiteMobile');
+      expect(xcodeProject.bundleId, 'com.example.flutterApp');
     });
 
     test('is not marked as modified after creation', () {
@@ -446,7 +481,7 @@ void main() {
       originalXcodeProject.edit(bundleId: 'com.example.fancy_app');
 
       expect(originalXcodeProject.isModified, false);
-      expect(originalXcodeProject.bundleId, 'com.example.kiteMobile');
+      expect(originalXcodeProject.bundleId, 'com.example.flutterApp');
     });
 
     test(
@@ -457,7 +492,7 @@ void main() {
         );
         final noopEdit = originalXcodeProject.edit();
         final sameBundleIdEdit = originalXcodeProject.edit(
-          bundleId: 'com.example.kiteMobile',
+          bundleId: 'com.example.flutterApp',
         );
 
         expect(originalXcodeProject, noopEdit);
@@ -473,11 +508,11 @@ void main() {
         bundleId: 'com.example.fancy_app',
       );
       final revertedXcodeProject = changedXcodeProject.edit(
-        bundleId: 'com.example.kiteMobile',
+        bundleId: 'com.example.flutterApp',
       );
 
       expect(revertedXcodeProject.isModified, false);
-      expect(revertedXcodeProject.bundleId, 'com.example.kiteMobile');
+      expect(revertedXcodeProject.bundleId, 'com.example.flutterApp');
     });
   });
 }
@@ -495,4 +530,20 @@ const _infoPlistLeadingTrailingContent = '''
 const _infoPlistLeadingTrailingContentUpdated = '''
         <!-- pre comment --><key>CFBundleDisplayName</key> <!-- post comment -->
         <!-- pre comment --><string>fancy_app</string> <!-- post comment -->
+''';
+const _xcodeProjectSample = r'''
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
+''';
+const _xcodeProjectSampleUpdated = r'''
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp;
 ''';

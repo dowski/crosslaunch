@@ -626,7 +626,7 @@ const iosXcodeProjectSrc = r'''
                                         "$(inherited)",
                                         "@executable_path/Frameworks",
                                 );
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
                                 SWIFT_VERSION = 5.0;
@@ -643,7 +643,7 @@ const iosXcodeProjectSrc = r'''
                                 CURRENT_PROJECT_VERSION = 1;
                                 GENERATE_INFOPLIST_FILE = YES;
                                 MARKETING_VERSION = 1.0;
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
                                 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -661,7 +661,7 @@ const iosXcodeProjectSrc = r'''
                                 CURRENT_PROJECT_VERSION = 1;
                                 GENERATE_INFOPLIST_FILE = YES;
                                 MARKETING_VERSION = 1.0;
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_VERSION = 5.0;
                                 TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -677,7 +677,7 @@ const iosXcodeProjectSrc = r'''
                                 CURRENT_PROJECT_VERSION = 1;
                                 GENERATE_INFOPLIST_FILE = YES;
                                 MARKETING_VERSION = 1.0;
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile.RunnerTests;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp.RunnerTests;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_VERSION = 5.0;
                                 TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -809,7 +809,7 @@ const iosXcodeProjectSrc = r'''
                                         "$(inherited)",
                                         "@executable_path/Frameworks",
                                 );
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
                                 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -832,7 +832,7 @@ const iosXcodeProjectSrc = r'''
                                         "$(inherited)",
                                         "@executable_path/Frameworks",
                                 );
-                                PRODUCT_BUNDLE_IDENTIFIER = com.example.kiteMobile;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
                                 SWIFT_VERSION = 5.0;
