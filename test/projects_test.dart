@@ -1,9 +1,11 @@
+import 'package:crosslaunch/fs/access.dart';
 import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:crosslaunch/testing/stub_data.dart';
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as pathlib;
 
 void main() {
   late FileSystem fileSystem;
@@ -111,6 +113,15 @@ Future<void> _createIosStructure(FileSystem fileSystem) async {
   await iosDir.create(recursive: true);
   final plistFile = await iosDir.childFile('Info.plist').create();
   await plistFile.writeAsString(iosInfoPlist, flush: true);
+  final xcodeProjFile = await fileSystem
+      .file(
+        pathlib.join(
+          '/foo/bar/',
+          ConfigFile.iosXcodeProject.projectRelativePath,
+        ),
+      )
+      .create(recursive: true);
+  await xcodeProjFile.writeAsString(iosXcodeProjectSrc, flush: true);
 }
 
 Future<void> _createAndroidStructure(FileSystem fileSystem) async {
@@ -119,4 +130,13 @@ Future<void> _createAndroidStructure(FileSystem fileSystem) async {
   final manifestFile =
       await androidDir.childFile('AndroidManifest.xml').create();
   await manifestFile.writeAsString(androidManifest, flush: true);
+  final buildGradleFile = await fileSystem
+      .file(
+        pathlib.join(
+          '/foo/bar/',
+          ConfigFile.appBuildGradle.projectRelativePath,
+        ),
+      )
+      .create(recursive: true);
+  await buildGradleFile.writeAsString(androidAppBuildGradle, flush: true);
 }
