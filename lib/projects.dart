@@ -27,6 +27,9 @@ final class AvailableProjects {
       case AppNameEdit(newName: final name):
         final updatedProject = project._withNewAppName(name);
         _replaceProject(current: project, updated: updatedProject);
+      case ApplicationIdEdit(newApplicationId: final applicationId):
+        final updatedProject = project._withNewApplicationId(applicationId);
+        _replaceProject(current: project, updated: updatedProject);
     }
   }
 
@@ -38,7 +41,8 @@ final class AvailableProjects {
       );
       await configStore.saveAndroidManifest(project.androidManifest!);
       await configStore.saveIosInfoPlist(project.iosInfoPlist!);
-
+      await configStore.saveAppBuildGradle(project.appBuildGradle!);
+      await configStore.saveIosXcodeProject(project.iosXcodeProject!);
       final reloadedProject = await ValidProject._fromDir(project.directory);
       _replaceProject(current: project, updated: reloadedProject);
     }
@@ -63,6 +67,13 @@ final class AppNameEdit implements ProjectEdit {
   AppNameEdit.newName(this.newName);
 }
 
+final class ApplicationIdEdit implements ProjectEdit {
+  final String newApplicationId;
+
+  ApplicationIdEdit.newApplicationId(this.newApplicationId);
+}
+
+
 sealed class Project {
   String get name;
   static Future<Project> fromDir(Directory directory) async {
@@ -81,12 +92,16 @@ final class ValidProject implements Project {
   final Set<SupportedPlatform> supportedPlatforms;
   final AndroidManifest? androidManifest;
   final IosInfoPlist? iosInfoPlist;
+  final AppBuildGradle? appBuildGradle;
+  final IosXcodeProject? iosXcodeProject;
 
   ValidProject(
     this.directory, {
     required this.supportedPlatforms,
     required this.androidManifest,
     required this.iosInfoPlist,
+    required this.appBuildGradle,
+    required this.iosXcodeProject,
   }) : name = pathlib.split(directory.path).last;
 
   static Future<ValidProject> _fromDir(Directory directory) async {
@@ -108,6 +123,12 @@ final class ValidProject implements Project {
           supportedPlatforms.contains(SupportedPlatform.ios)
               ? await configStore.loadIosInfoPlist()
               : null,
+      appBuildGradle: supportedPlatforms.contains(SupportedPlatform.android)
+          ? await configStore.loadAppBuildGradle()
+          : null,
+      iosXcodeProject: supportedPlatforms.contains(SupportedPlatform.ios)
+          ? await configStore.loadIosXcodeProject()
+          : null,
     );
   }
 
@@ -128,7 +149,9 @@ final class ValidProject implements Project {
 
   bool get hasEdits =>
       (androidManifest?.isModified ?? false) ||
-      (iosInfoPlist?.isModified ?? false);
+      (iosInfoPlist?.isModified ?? false) ||
+      (appBuildGradle?.isModified ?? false) ||
+      (iosXcodeProject?.isModified ?? false);
 
   ValidProject _withNewAppName(String newName) {
     return ValidProject(
@@ -136,7 +159,18 @@ final class ValidProject implements Project {
       supportedPlatforms: supportedPlatforms,
       androidManifest: androidManifest?.edit(androidLabel: newName),
       iosInfoPlist: iosInfoPlist?.edit(displayName: newName),
+      appBuildGradle: appBuildGradle,
+      iosXcodeProject: iosXcodeProject,
     );
+  }
+
+  ValidProject _withNewApplicationId(String newApplicationId) {
+    return ValidProject(directory,
+        supportedPlatforms: supportedPlatforms,
+        androidManifest: androidManifest,
+        iosInfoPlist: iosInfoPlist,
+        appBuildGradle: appBuildGradle?.edit(appId: newApplicationId),
+        iosXcodeProject: iosXcodeProject?.edit(bundleId: newApplicationId));
   }
 }
 

@@ -227,6 +227,23 @@ final class ProjectSettingsWidget extends StatelessWidget {
               );
             },
           ),
+          LinkedTextField(
+            label: 'App ID',
+            dataDescriptor1: DataDescriptor.android(
+              'applicationId',
+              value: project.appBuildGradle?.applicationId ?? '',
+            ),
+            dataDescriptor2: DataDescriptor.ios(
+              'Bundle ID',
+              value: project.iosXcodeProject?.bundleId ?? '',
+            ),
+            onChanged: (value) {
+              context.read<AvailableProjects>().edit(
+                project,
+                ApplicationIdEdit.newApplicationId(value),
+              );
+            },
+          ),
         ],
       ],
     );
