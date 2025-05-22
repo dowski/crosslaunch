@@ -26,10 +26,28 @@ final class AvailableProjects {
     switch (edit) {
       case AppNameEdit(newName: final name):
         final updatedProject = project._withNewAppName(name);
-        final index = _current.indexOf(project);
-        _current[index] = updatedProject;
-        _streamController.add(List.of(_current));
+        _replaceProject(current: project, updated: updatedProject);
     }
+  }
+
+  Future<void> save(ValidProject project) async {
+    if (project.hasEdits) {
+      final configStore = ConfigStore(
+        appDirectory: project.directory,
+        fileSystem: project.directory.fileSystem,
+      );
+      await configStore.saveAndroidManifest(project.androidManifest!);
+      await configStore.saveIosInfoPlist(project.iosInfoPlist!);
+
+      final reloadedProject = await ValidProject._fromDir(project.directory);
+      _replaceProject(current: project, updated: reloadedProject);
+    }
+  }
+
+  void _replaceProject({required ValidProject current, required ValidProject updated}) {
+    final index = _current.indexOf(current);
+    _current[index] = updated;
+    _streamController.add(List.of(_current));
   }
 
   void dispose() {

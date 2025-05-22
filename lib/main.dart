@@ -198,7 +198,10 @@ final class ProjectSettingsWidget extends StatelessWidget {
             Spacer(),
             PushButton(
               controlSize: ControlSize.regular,
-              onPressed: project.hasEdits ? () {} : null,
+              onPressed:
+                  project.hasEdits
+                      ? () => context.read<AvailableProjects>().save(project)
+                      : null,
               child: Text('Apply'),
             ),
           ],
