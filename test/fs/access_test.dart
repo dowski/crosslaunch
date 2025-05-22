@@ -191,7 +191,7 @@ void main() {
     });
 
     test(
-      'setting the same or null value for the label returns the original instance',
+      'setting the same or null value for the label returns equivalent instance',
       () {
         final originalManifest = AndroidManifest.fromXml(xml: androidManifest);
         final noopEdit = originalManifest.edit();
@@ -201,6 +201,17 @@ void main() {
         expect(sameNameEdit, originalManifest);
       },
     );
+
+    test('editing and reverting back to original works', () {
+      final originalManifest = AndroidManifest.fromXml(xml: androidManifest);
+      final changedManifest = originalManifest.edit(androidLabel: 'fancy_app');
+      final revertedManifest = changedManifest.edit(
+        androidLabel: 'flutter_app',
+      );
+
+      expect(revertedManifest.isModified, false);
+      expect(revertedManifest.androidLabel, 'flutter_app');
+    });
   });
 
   group(IosInfoPlist, () {
@@ -233,7 +244,7 @@ void main() {
     });
 
     test(
-      'setting the same or null value for the label returns the original instance',
+      'setting the same or null value for the label returns equivalent instance',
       () {
         final originalInfoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
         final noopEdit = originalInfoPlist.edit();
@@ -243,6 +254,17 @@ void main() {
         expect(sameNameEdit, originalInfoPlist);
       },
     );
+
+    test('editing and reverting back to original works', () {
+      final originalInfoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+      final changedInfoPlist = originalInfoPlist.edit(displayName: 'fancy_app');
+      final revertedInfoPlist = changedInfoPlist.edit(
+        displayName: 'flutter_app',
+      );
+
+      expect(revertedInfoPlist.isModified, false);
+      expect(revertedInfoPlist.displayName, 'flutter_app');
+    });
   });
 }
 

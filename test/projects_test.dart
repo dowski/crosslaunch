@@ -69,7 +69,7 @@ void main() {
       await _createIosStructure(fileSystem);
 
       final project = await Project.fromDir(projectDir) as ValidProject;
-      expect(project.attributes[0].$2?.iosValue?.value, 'flutter_app');
+      expect(project.iosInfoPlist?.displayName, 'flutter_app');
     });
 
     test('ios project without Info.plist is invalid', () async {
@@ -90,7 +90,7 @@ void main() {
       await _createAndroidStructure(fileSystem);
 
       final project = await Project.fromDir(projectDir) as ValidProject;
-      expect(project.attributes[0].$2?.androidValue?.value, 'flutter_app');
+      expect(project.androidManifest?.androidLabel, 'flutter_app');
     });
 
     test('android project without AndroidManifest.xml is invalid', () async {
@@ -116,7 +116,7 @@ Future<void> _createIosStructure(FileSystem fileSystem) async {
 Future<void> _createAndroidStructure(FileSystem fileSystem) async {
   final androidDir = fileSystem.directory('/foo/bar/android/app/src/main');
   await androidDir.create(recursive: true);
-  final manifestFile = await androidDir.childFile('AndroidManifest.xml').create();
+  final manifestFile =
+      await androidDir.childFile('AndroidManifest.xml').create();
   await manifestFile.writeAsString(androidManifest, flush: true);
 }
-

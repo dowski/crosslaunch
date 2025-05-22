@@ -196,24 +196,35 @@ final class ProjectSettingsWidget extends StatelessWidget {
               ),
             ],
             Spacer(),
-            PushButton(controlSize: ControlSize.small,child: Text('Apply'),)
+            PushButton(
+              controlSize: ControlSize.regular,
+              onPressed: project.hasEdits ? () {} : null,
+              child: Text('Apply'),
+            ),
           ],
         ),
         SizedBox(height: 8),
         Container(height: 1, color: MacosColors.separatorColor),
         SizedBox(height: 8),
-        for (final (property, value) in project.attributes)
-        LinkedTextField(
-          label: property.displayName,
-          dataDescriptor1: DataDescriptor.android(
-            property.androidProperty.name,
-            dataSource: value!.androidValue!,
+        ...[
+          LinkedTextField(
+            label: 'App Name',
+            dataDescriptor1: DataDescriptor.android(
+              'android:label',
+              value: project.androidManifest?.androidLabel ?? '',
+            ),
+            dataDescriptor2: DataDescriptor.ios(
+              'Display Name',
+              value: project.iosInfoPlist?.displayName ?? '',
+            ),
+            onChanged: (value) {
+              context.read<AvailableProjects>().edit(
+                project,
+                AppNameEdit.newName(value),
+              );
+            },
           ),
-          dataDescriptor2: DataDescriptor.ios(
-            property.iosProperty.name,
-            dataSource: value.iosValue!,
-          ),
-        ),
+        ],
       ],
     );
   }
