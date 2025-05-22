@@ -32,6 +32,24 @@ void main() {
           )
           .create(recursive: true);
       iosInfoPlistFile.writeAsString(iosInfoPlist);
+      final buildGradleFile = await fileSystem
+          .file(
+            pathlib.join(
+              project.path,
+              ConfigFile.appBuildGradle.projectRelativePath,
+            ),
+          )
+          .create(recursive: true);
+      buildGradleFile.writeAsString(androidAppBuildGradle);
+      final xcodeProjectFile = await fileSystem
+          .file(
+            pathlib.join(
+              project.path,
+              ConfigFile.iosXcodeProject.projectRelativePath,
+            ),
+          )
+          .create(recursive: true);
+      xcodeProjectFile.writeAsString(iosXcodeProjectSrc);
 
       weirdProject = await fileSystem.directory('/weird_project').create();
       final weirdManifestFile = await fileSystem
@@ -158,6 +176,64 @@ void main() {
 
         expect(weirdInfoPlistXml, _infoPlistLeadingTrailingContentUpdated);
       });
+
+      test('loads AppBuildGradle successfully', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final buildGradle = await configStore.loadAppBuildGradle();
+
+        expect(buildGradle, isA<AppBuildGradle>());
+      });
+
+      test('can write and read modified AppBuildGradle', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final buildGradle = await configStore.loadAppBuildGradle();
+
+        await configStore.saveAppBuildGradle(
+          buildGradle.edit(appId: 'com.example.fancy_app'),
+        );
+        final updatedBuildGradle = await configStore.loadAppBuildGradle();
+
+        expect(updatedBuildGradle.applicationId, 'com.example.fancy_app');
+      });
+
+      test('loads IosXcodeProject successfully', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final xcodeProject = await configStore.loadIosXcodeProject();
+
+        expect(xcodeProject, isA<IosXcodeProject>());
+      });
+
+      test('can write and read modified IosXcodeProject', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final xcodeProject = await configStore.loadIosXcodeProject();
+
+        await configStore.saveIosXcodeProject(
+          xcodeProject.edit(bundleId: 'com.example.fancy_app'),
+        );
+        final updatedXcodeProject =
+            await configStore.loadIosXcodeProject();
+
+        expect(
+          updatedXcodeProject.bundleId,
+          'com.example.fancy_app',
+        );
+      });
     });
   });
 
@@ -264,6 +340,144 @@ void main() {
 
       expect(revertedInfoPlist.isModified, false);
       expect(revertedInfoPlist.displayName, 'flutter_app');
+    });
+  });
+
+  group(AppBuildGradle, () {
+    test('reads applicationId from build.gradle.kts', () {
+      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
+
+      expect(appBuildGradle.applicationId, 'com.example.flutter_app');
+    });
+
+    test('is not marked as modified after creation', () {
+      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
+
+      expect(appBuildGradle.isModified, false);
+    });
+
+    test('can modify the applicationId', () {
+      final originalAppBuildGradle = AppBuildGradle.fromKts(
+        kts: androidAppBuildGradle,
+      );
+      final updatedAppBuildGradle = originalAppBuildGradle.edit(
+        appId: 'com.example.fancy_app',
+      );
+
+      expect(updatedAppBuildGradle.isModified, true);
+      expect(updatedAppBuildGradle.applicationId, 'com.example.fancy_app');
+    });
+
+    test('modification doesn\'t impact the original', () {
+      final originalAppBuildGradle = AppBuildGradle.fromKts(
+        kts: androidAppBuildGradle,
+      );
+      originalAppBuildGradle.edit(appId: 'com.example.fancy_app');
+
+      expect(originalAppBuildGradle.isModified, false);
+      expect(originalAppBuildGradle.applicationId, 'com.example.flutter_app');
+    });
+
+    test(
+      'setting the same or null value for the applicationId returns equivalent instance',
+      () {
+        final originalAppBuildGradle = AppBuildGradle.fromKts(
+          kts: androidAppBuildGradle,
+        );
+        final noopEdit = originalAppBuildGradle.edit();
+        final sameAppIdEdit = originalAppBuildGradle.edit(
+          appId: 'com.example.flutter_app',
+        );
+
+        expect(originalAppBuildGradle, noopEdit);
+        expect(sameAppIdEdit, originalAppBuildGradle);
+      },
+    );
+
+    test('editing and reverting back to the original works', () {
+      final originalAppBuildGradle = AppBuildGradle.fromKts(
+        kts: androidAppBuildGradle,
+        );
+      final changedAppBuildGradle = originalAppBuildGradle.edit(
+        appId: 'com.example.fancy_app',
+      );
+      final revertedAppBuildGradle = changedAppBuildGradle.edit(
+        appId: 'com.example.flutter_app',
+      );
+
+      expect(revertedAppBuildGradle.isModified, false);
+      expect(revertedAppBuildGradle.applicationId, 'com.example.flutter_app');
+    });
+  });
+
+  group(IosXcodeProject, () {
+    test('reads PRODUCT_BUNDLE_IDENTIFIER from pbxproj', () {
+      final xcodeProject = IosXcodeProject.fromPbxproj(
+        pbxproj: iosXcodeProjectSrc,
+      );
+
+      expect(xcodeProject.bundleId, 'com.example.kiteMobile');
+    });
+
+    test('is not marked as modified after creation', () {
+      final xcodeProject = IosXcodeProject.fromPbxproj(
+        pbxproj: iosXcodeProjectSrc,
+      );
+
+      expect(xcodeProject.isModified, false);
+    });
+
+    test('can modify the bundleId', () {
+      final originalXcodeProject = IosXcodeProject.fromPbxproj(
+        pbxproj: iosXcodeProjectSrc,
+      );
+      final updatedXcodeProject = originalXcodeProject.edit(
+        bundleId: 'com.example.fancy_app',
+      );
+
+      expect(updatedXcodeProject.isModified, true);
+      expect(updatedXcodeProject.bundleId, 'com.example.fancy_app');
+    });
+
+    test('modification doesn\'t impact the original', () {
+      final originalXcodeProject = IosXcodeProject.fromPbxproj(
+        pbxproj: iosXcodeProjectSrc,
+      );
+      originalXcodeProject.edit(bundleId: 'com.example.fancy_app');
+
+      expect(originalXcodeProject.isModified, false);
+      expect(originalXcodeProject.bundleId, 'com.example.kiteMobile');
+    });
+
+    test(
+      'setting the same or null value for the bundleId returns equivalent instance',
+      () {
+        final originalXcodeProject = IosXcodeProject.fromPbxproj(
+          pbxproj: iosXcodeProjectSrc,
+        );
+        final noopEdit = originalXcodeProject.edit();
+        final sameBundleIdEdit = originalXcodeProject.edit(
+          bundleId: 'com.example.kiteMobile',
+        );
+
+        expect(originalXcodeProject, noopEdit);
+        expect(sameBundleIdEdit, originalXcodeProject);
+      },
+    );
+
+    test('editing and reverting back to the original works', () {
+      final originalXcodeProject = IosXcodeProject.fromPbxproj(
+        pbxproj: iosXcodeProjectSrc,
+      );
+      final changedXcodeProject = originalXcodeProject.edit(
+        bundleId: 'com.example.fancy_app',
+      );
+      final revertedXcodeProject = changedXcodeProject.edit(
+        bundleId: 'com.example.kiteMobile',
+      );
+
+      expect(revertedXcodeProject.isModified, false);
+      expect(revertedXcodeProject.bundleId, 'com.example.kiteMobile');
     });
   });
 }
