@@ -57,12 +57,14 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
                   controller: _controller1,
                   style: typography.subheadline,
                   prefix: isExpanded ? widget.dataDescriptor1.label : null,
+                  onChanged: (value) => widget.dataDescriptor1.dataSource.value = value,
                 ),
                 if (isExpanded)
                   MacosTextField(
                     controller: _controller2,
                     style: typography.subheadline,
                     prefix: isExpanded ? widget.dataDescriptor2.label : null,
+                    onChanged: (value) => widget.dataDescriptor2.dataSource.value = value,
                   ),
               ],
             ),
@@ -81,7 +83,6 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
                               : CupertinoIcons.chevron_up,
                       onPressed: () => setState(() => isExpanded = !isExpanded),
                     ),
-
                     HelpButton(onPressed: () {}),
                   ],
                 ),

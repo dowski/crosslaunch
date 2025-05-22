@@ -135,6 +135,7 @@ class PlatformValue {
 
   bool get isEdited => newValue != initialValue;
   String get value => isEdited ? newValue : initialValue;
+  set value(String newValue) => this.newValue = newValue;
 }
 
 class PropertyLoader {

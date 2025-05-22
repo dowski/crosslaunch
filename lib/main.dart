@@ -195,6 +195,8 @@ final class ProjectSettingsWidget extends StatelessWidget {
                 color: MacosColors.secondaryLabelColor.darkColor,
               ),
             ],
+            Spacer(),
+            PushButton(controlSize: ControlSize.small,child: Text('Apply'),)
           ],
         ),
         SizedBox(height: 8),

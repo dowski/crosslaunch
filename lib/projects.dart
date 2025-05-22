@@ -56,10 +56,15 @@ final class ValidProject implements Project {
     final supportedPlatforms = await _resolveSupportedPlatforms(directory);
     if (supportedPlatforms.isEmpty) throw Exception('No supported platforms');
     final properties = [CommonProperty.appName];
-    final values = await PropertyLoader(fileSystem: directory.fileSystem).load(properties, directory: directory, platforms: supportedPlatforms);
+    final values = await PropertyLoader(
+      fileSystem: directory.fileSystem,
+    ).load(properties, directory: directory, platforms: supportedPlatforms);
     // Zip the properties and values together into an attributes list.
-    final attributes = List.generate(properties.length, (index) => (properties[index], values[index]));
-    
+    final attributes = List.generate(
+      properties.length,
+      (index) => (properties[index], values[index]),
+    );
+
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
@@ -81,6 +86,12 @@ final class ValidProject implements Project {
     }
     return supportedPlatforms;
   }
+
+  bool get hasEdits => attributes.any(
+    (element) =>
+        (element.$2?.androidValue?.isEdited ?? false) ||
+        (element.$2?.iosValue?.isEdited ?? false),
+  );
 }
 
 final class InvalidProject implements Project {
@@ -88,5 +99,6 @@ final class InvalidProject implements Project {
   @override
   final String name;
 
-  InvalidProject(this.path) : name = pathlib.split(path).lastWhere((e) => e.trim().isNotEmpty);
+  InvalidProject(this.path)
+    : name = pathlib.split(path).lastWhere((e) => e.trim().isNotEmpty);
 }
