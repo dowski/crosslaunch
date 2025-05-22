@@ -35,6 +35,17 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   }
 
   @override
+  void didUpdateWidget(covariant LinkedTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.dataDescriptor1.value != _controller1.text) {
+      _controller1.text = widget.dataDescriptor1.value;
+    }
+    if (widget.dataDescriptor2.value != _controller2.text) {
+      _controller2.text = widget.dataDescriptor2.value;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final typography = MacosTypography.of(context);
     return IntrinsicHeight(
