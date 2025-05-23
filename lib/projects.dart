@@ -24,11 +24,11 @@ final class AvailableProjects {
 
   void edit(ValidProject project, ProjectEdit edit) {
     switch (edit) {
-      case AppNameEdit(newName: final name):
-        final updatedProject = project._withNewAppName(name);
+      case AppNameEdit edit:
+        final updatedProject = project._withNewAppName(edit.newName, editTarget: edit.target);
         _replaceProject(current: project, updated: updatedProject);
-      case ApplicationIdEdit(newApplicationId: final applicationId):
-        final updatedProject = project._withNewApplicationId(applicationId);
+      case ApplicationIdEdit edit:
+        final updatedProject = project._withNewApplicationId(edit.newApplicationId, editTarget: edit.target);
         _replaceProject(current: project, updated: updatedProject);
     }
   }
@@ -48,7 +48,10 @@ final class AvailableProjects {
     }
   }
 
-  void _replaceProject({required ValidProject current, required ValidProject updated}) {
+  void _replaceProject({
+    required ValidProject current,
+    required ValidProject updated,
+  }) {
     final index = _current.indexOf(current);
     _current[index] = updated;
     _streamController.add(List.of(_current));
@@ -59,20 +62,36 @@ final class AvailableProjects {
   }
 }
 
-sealed class ProjectEdit {}
+enum EditTarget {
+  android,
+  ios,
+  both;
+
+  bool get includesAndroid =>
+      this == EditTarget.android || this == EditTarget.both;
+
+  bool get includesIos => this == EditTarget.ios;
+}
+
+sealed class ProjectEdit {
+  EditTarget get target;
+}
 
 final class AppNameEdit implements ProjectEdit {
   final String newName;
+  @override
+  final EditTarget target;
 
-  AppNameEdit.newName(this.newName);
+  AppNameEdit.newName(this.newName, {required this.target});
 }
 
 final class ApplicationIdEdit implements ProjectEdit {
   final String newApplicationId;
+  @override
+  final EditTarget target;
 
-  ApplicationIdEdit.newApplicationId(this.newApplicationId);
+  ApplicationIdEdit.newApplicationId(this.newApplicationId, {required this.target});
 }
-
 
 sealed class Project {
   String get name;
@@ -123,12 +142,14 @@ final class ValidProject implements Project {
           supportedPlatforms.contains(SupportedPlatform.ios)
               ? await configStore.loadIosInfoPlist()
               : null,
-      appBuildGradle: supportedPlatforms.contains(SupportedPlatform.android)
-          ? await configStore.loadAppBuildGradle()
-          : null,
-      iosXcodeProject: supportedPlatforms.contains(SupportedPlatform.ios)
-          ? await configStore.loadIosXcodeProject()
-          : null,
+      appBuildGradle:
+          supportedPlatforms.contains(SupportedPlatform.android)
+              ? await configStore.loadAppBuildGradle()
+              : null,
+      iosXcodeProject:
+          supportedPlatforms.contains(SupportedPlatform.ios)
+              ? await configStore.loadIosXcodeProject()
+              : null,
     );
   }
 
@@ -153,24 +174,44 @@ final class ValidProject implements Project {
       (appBuildGradle?.isModified ?? false) ||
       (iosXcodeProject?.isModified ?? false);
 
-  ValidProject _withNewAppName(String newName) {
+  ValidProject _withNewAppName(
+    String newName, {
+    required EditTarget editTarget,
+  }) {
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest?.edit(androidLabel: newName),
-      iosInfoPlist: iosInfoPlist?.edit(displayName: newName),
+      androidManifest:
+          editTarget.includesAndroid
+              ? androidManifest?.edit(androidLabel: newName)
+              : androidManifest,
+      iosInfoPlist:
+          editTarget.includesIos
+              ? iosInfoPlist?.edit(displayName: newName)
+              : iosInfoPlist,
       appBuildGradle: appBuildGradle,
       iosXcodeProject: iosXcodeProject,
     );
   }
 
-  ValidProject _withNewApplicationId(String newApplicationId) {
-    return ValidProject(directory,
-        supportedPlatforms: supportedPlatforms,
-        androidManifest: androidManifest,
-        iosInfoPlist: iosInfoPlist,
-        appBuildGradle: appBuildGradle?.edit(appId: newApplicationId),
-        iosXcodeProject: iosXcodeProject?.edit(bundleId: newApplicationId));
+  ValidProject _withNewApplicationId(
+    String newApplicationId, {
+    required EditTarget editTarget,
+  }) {
+    return ValidProject(
+      directory,
+      supportedPlatforms: supportedPlatforms,
+      androidManifest: androidManifest,
+      iosInfoPlist: iosInfoPlist,
+      appBuildGradle:
+          editTarget.includesAndroid
+              ? appBuildGradle?.edit(appId: newApplicationId)
+              : appBuildGradle,
+      iosXcodeProject:
+          editTarget.includesIos
+              ? iosXcodeProject?.edit(bundleId: newApplicationId)
+              : iosXcodeProject,
+    );
   }
 }
 

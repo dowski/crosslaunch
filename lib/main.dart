@@ -224,7 +224,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
             onChanged: (value) {
               context.read<AvailableProjects>().edit(
                 project,
-                AppNameEdit.newName(value),
+                AppNameEdit.newName(value, target: EditTarget.both),
               );
             },
           ),
@@ -242,7 +242,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
             onChanged: (value) {
               context.read<AvailableProjects>().edit(
                 project,
-                ApplicationIdEdit.newApplicationId(value),
+                ApplicationIdEdit.newApplicationId(value, target: EditTarget.both),
               );
             },
           ),
@@ -262,4 +262,15 @@ final class PlatformDataDescriptor implements DataDescriptor {
     : label = PlatformLabel.android(label: text);
   PlatformDataDescriptor.ios(String text, {required this.value})
     : label = PlatformLabel.ios(label: text);
+}
+
+extension on SupportedPlatform {
+  EditTarget get editTarget {
+    switch (this) {
+      case SupportedPlatform.android:
+        return EditTarget.android;
+      case SupportedPlatform.ios:
+        return EditTarget.ios;
+    }
+  }
 }
