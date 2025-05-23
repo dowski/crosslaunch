@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:crosslaunch/linked_text_field.dart';
 import 'package:crosslaunch/platform.dart';
+import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -212,11 +213,11 @@ final class ProjectSettingsWidget extends StatelessWidget {
         ...[
           LinkedTextField(
             label: 'App Name',
-            dataDescriptor1: DataDescriptor.android(
+            dataDescriptor1: PlatformDataDescriptor.android(
               'android:label',
               value: project.androidManifest?.androidLabel ?? '',
             ),
-            dataDescriptor2: DataDescriptor.ios(
+            dataDescriptor2: PlatformDataDescriptor.ios(
               'Display Name',
               value: project.iosInfoPlist?.displayName ?? '',
             ),
@@ -230,11 +231,11 @@ final class ProjectSettingsWidget extends StatelessWidget {
           const SizedBox(height: 16),
           LinkedTextField(
             label: 'App ID',
-            dataDescriptor1: DataDescriptor.android(
+            dataDescriptor1: PlatformDataDescriptor.android(
               'applicationId',
               value: project.appBuildGradle?.applicationId ?? '',
             ),
-            dataDescriptor2: DataDescriptor.ios(
+            dataDescriptor2: PlatformDataDescriptor.ios(
               'Bundle ID',
               value: project.iosXcodeProject?.bundleId ?? '',
             ),
@@ -249,4 +250,16 @@ final class ProjectSettingsWidget extends StatelessWidget {
       ],
     );
   }
+}
+
+final class PlatformDataDescriptor implements DataDescriptor {
+  @override
+  final Widget label;
+  @override
+  final String value;
+
+  PlatformDataDescriptor.android(String text, {required this.value})
+    : label = PlatformLabel.android(label: text);
+  PlatformDataDescriptor.ios(String text, {required this.value})
+    : label = PlatformLabel.ios(label: text);
 }

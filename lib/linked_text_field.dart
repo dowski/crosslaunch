@@ -1,5 +1,4 @@
 import 'package:crosslaunch/macos_ui.dart';
-import 'package:crosslaunch/platform_label.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
@@ -114,12 +113,7 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   }
 }
 
-final class DataDescriptor {
-  final Widget label;
-  final String value;
-
-  DataDescriptor.android(String text, {required this.value})
-    : label = PlatformLabel.android(label: text);
-  DataDescriptor.ios(String text, {required this.value})
-    : label = PlatformLabel.ios(label: text);
+abstract interface class DataDescriptor {
+  Widget get label;
+  String get value;
 }
