@@ -221,10 +221,16 @@ final class ProjectSettingsWidget extends StatelessWidget {
               'Display Name',
               value: project.iosInfoPlist?.displayName ?? '',
             ),
-            onChanged: (value) {
+            onChanged: (value, isCollapsed, descriptor) {
               context.read<AvailableProjects>().edit(
                 project,
-                AppNameEdit.newName(value, target: EditTarget.both),
+                AppNameEdit.newName(
+                  value,
+                  target:
+                      isCollapsed
+                          ? EditTarget.both
+                          : descriptor.platform.editTarget,
+                ),
               );
             },
           ),
@@ -239,10 +245,16 @@ final class ProjectSettingsWidget extends StatelessWidget {
               'Bundle ID',
               value: project.iosXcodeProject?.bundleId ?? '',
             ),
-            onChanged: (value) {
+            onChanged: (value, isCollapsed, descriptor) {
               context.read<AvailableProjects>().edit(
                 project,
-                ApplicationIdEdit.newApplicationId(value, target: EditTarget.both),
+                ApplicationIdEdit.newApplicationId(
+                  value,
+                  target:
+                      isCollapsed
+                          ? EditTarget.both
+                          : descriptor.platform.editTarget,
+                ),
               );
             },
           ),
@@ -257,11 +269,14 @@ final class PlatformDataDescriptor implements DataDescriptor {
   final Widget label;
   @override
   final String value;
+  final SupportedPlatform platform;
 
   PlatformDataDescriptor.android(String text, {required this.value})
-    : label = PlatformLabel.android(label: text);
+    : label = PlatformLabel.android(label: text),
+      platform = SupportedPlatform.android;
   PlatformDataDescriptor.ios(String text, {required this.value})
-    : label = PlatformLabel.ios(label: text);
+    : label = PlatformLabel.ios(label: text),
+      platform = SupportedPlatform.ios;
 }
 
 extension on SupportedPlatform {

@@ -25,10 +25,16 @@ final class AvailableProjects {
   void edit(ValidProject project, ProjectEdit edit) {
     switch (edit) {
       case AppNameEdit edit:
-        final updatedProject = project._withNewAppName(edit.newName, editTarget: edit.target);
+        final updatedProject = project._withNewAppName(
+          edit.newName,
+          editTarget: edit.target,
+        );
         _replaceProject(current: project, updated: updatedProject);
       case ApplicationIdEdit edit:
-        final updatedProject = project._withNewApplicationId(edit.newApplicationId, editTarget: edit.target);
+        final updatedProject = project._withNewApplicationId(
+          edit.newApplicationId,
+          editTarget: edit.target,
+        );
         _replaceProject(current: project, updated: updatedProject);
     }
   }
@@ -70,7 +76,7 @@ enum EditTarget {
   bool get includesAndroid =>
       this == EditTarget.android || this == EditTarget.both;
 
-  bool get includesIos => this == EditTarget.ios;
+  bool get includesIos => this == EditTarget.ios || this == EditTarget.both;
 }
 
 sealed class ProjectEdit {
@@ -90,7 +96,10 @@ final class ApplicationIdEdit implements ProjectEdit {
   @override
   final EditTarget target;
 
-  ApplicationIdEdit.newApplicationId(this.newApplicationId, {required this.target});
+  ApplicationIdEdit.newApplicationId(
+    this.newApplicationId, {
+    required this.target,
+  });
 }
 
 sealed class Project {

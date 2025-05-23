@@ -2,11 +2,14 @@ import 'package:crosslaunch/macos_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
-final class LinkedTextField extends StatefulWidget {
+typedef OnTextChange<T extends DataDescriptor> =
+    void Function(String value, bool isCollapsed, T descriptor);
+
+final class LinkedTextField<T extends DataDescriptor> extends StatefulWidget {
   final String label;
-  final DataDescriptor dataDescriptor1;
-  final DataDescriptor dataDescriptor2;
-  final ValueChanged<String>? onChanged;
+  final T dataDescriptor1;
+  final T dataDescriptor2;
+  final OnTextChange<T>? onChanged;
 
   const LinkedTextField({
     super.key,
@@ -17,10 +20,11 @@ final class LinkedTextField extends StatefulWidget {
   });
 
   @override
-  State<LinkedTextField> createState() => _LinkedTextFieldState();
+  State<LinkedTextField<T>> createState() => _LinkedTextFieldState<T>();
 }
 
-class _LinkedTextFieldState extends State<LinkedTextField> {
+class _LinkedTextFieldState<T extends DataDescriptor>
+    extends State<LinkedTextField<T>> {
   late TextEditingController _controller1;
   late TextEditingController _controller2;
   late bool isExpanded;
@@ -34,7 +38,7 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
   }
 
   @override
-  void didUpdateWidget(covariant LinkedTextField oldWidget) {
+  void didUpdateWidget(covariant LinkedTextField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.dataDescriptor1.value != _controller1.text) {
       _controller1.text = widget.dataDescriptor1.value;
@@ -68,14 +72,28 @@ class _LinkedTextFieldState extends State<LinkedTextField> {
                   controller: _controller1,
                   style: typography.subheadline,
                   prefix: isExpanded ? widget.dataDescriptor1.label : null,
-                  onChanged: widget.onChanged,
+                  onChanged:
+                      widget.onChanged == null
+                          ? null
+                          : (value) => widget.onChanged!(
+                            value,
+                            !isExpanded,
+                            widget.dataDescriptor1,
+                          ),
                 ),
                 if (isExpanded)
                   MacosTextField(
                     controller: _controller2,
                     style: typography.subheadline,
                     prefix: isExpanded ? widget.dataDescriptor2.label : null,
-                    onChanged: widget.onChanged,
+                    onChanged:
+                        widget.onChanged == null
+                            ? null
+                            : (value) => widget.onChanged!(
+                              value,
+                              !isExpanded,
+                              widget.dataDescriptor2,
+                            ),
                   ),
               ],
             ),
