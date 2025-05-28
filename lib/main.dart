@@ -262,6 +262,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
         const SizedBox(height: 8),
         _Separator(),
         const SizedBox(height: 8),
+        _AppIconsWidget(),
       ],
     );
   }
@@ -298,9 +299,73 @@ class _Separator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 1,
-      color: MacosColors.separatorColor,
+    return Container(height: 1, color: MacosColors.separatorColor);
+  }
+}
+
+class _AppIconsWidget extends StatelessWidget {
+  const _AppIconsWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final typography = MacosTypography.of(context);
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [Text('Icons', style: typography.subheadline)],
+            ),
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 8,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      MacosIcon(
+                        Icons.apple,
+                        color: MacosColors.secondaryLabelColor.darkColor,
+                      ),
+                      SizedBox(width: 16),
+                      SizedBox(height: 64, width: 64, child: Placeholder()),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      MacosIcon(
+                        Icons.android,
+                        color: MacosColors.secondaryLabelColor.darkColor,
+                      ),
+                      SizedBox(width: 16),
+                      SizedBox(height: 64, width: 64, child: Placeholder())
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PushButton(controlSize: ControlSize.regular, onPressed: () {}, child: const Text('Choose')),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
