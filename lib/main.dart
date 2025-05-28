@@ -208,7 +208,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
           ],
         ),
         SizedBox(height: 8),
-        Container(height: 1, color: MacosColors.separatorColor),
+        _Separator(),
         SizedBox(height: 8),
         ...[
           LinkedTextField(
@@ -259,6 +259,9 @@ final class ProjectSettingsWidget extends StatelessWidget {
             },
           ),
         ],
+        const SizedBox(height: 8),
+        _Separator(),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -287,5 +290,17 @@ extension on SupportedPlatform {
       case SupportedPlatform.ios:
         return EditTarget.ios;
     }
+  }
+}
+
+class _Separator extends StatelessWidget {
+  const _Separator({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      color: MacosColors.separatorColor,
+    );
   }
 }
