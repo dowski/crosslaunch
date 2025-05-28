@@ -294,7 +294,7 @@ extension on SupportedPlatform {
 }
 
 class _Separator extends StatelessWidget {
-  const _Separator({Key? key}) : super(key: key);
+  const _Separator({super.key});
 
   @override
   Widget build(BuildContext context) {
