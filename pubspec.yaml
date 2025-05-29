@@ -40,6 +40,10 @@ dependencies:
   path: ^1.9.1
   provider: ^6.1.5
   file: ^7.0.1
+  flutter_launcher_icons:
+    git:
+      url: https://github.com/dowski/flutter_launcher_icons.git
+      ref: async-fix
 
 dev_dependencies:
   flutter_test:

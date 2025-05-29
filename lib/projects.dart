@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:crosslaunch/fs/access.dart';
+import 'package:crosslaunch/fs/icons.dart';
 import 'package:crosslaunch/platform.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
+import 'package:flutter/rendering.dart';
 import 'package:path/path.dart' as pathlib;
 
 final class AvailableProjects {
@@ -36,6 +38,11 @@ final class AvailableProjects {
           editTarget: edit.target,
         );
         _replaceProject(current: project, updated: updatedProject);
+      case AppIconEdit edit:
+        final updatedProject = project._withReplacementIconPath(
+          edit.newIconPath,
+        );
+        _replaceProject(current: project, updated: updatedProject);
     }
   }
 
@@ -49,6 +56,14 @@ final class AvailableProjects {
       await configStore.saveIosInfoPlist(project.iosInfoPlist!);
       await configStore.saveAppBuildGradle(project.appBuildGradle!);
       await configStore.saveIosXcodeProject(project.iosXcodeProject!);
+      if (project.replacementIconPath != null) {
+        // I think this eviction is necessary but not sufficient to force
+        // the images visible in the app to reload.
+        await project.androidIconImage?.evict();
+        await project.iosIconImage?.evict();
+        final iconStore = IconStore(appDirectory: project.directory);
+        await iconStore.replaceIcon(project.replacementIconPath!);
+      }
       final reloadedProject = await ValidProject._fromDir(project.directory);
       _replaceProject(current: project, updated: reloadedProject);
     }
@@ -102,6 +117,14 @@ final class ApplicationIdEdit implements ProjectEdit {
   });
 }
 
+final class AppIconEdit implements ProjectEdit {
+  final String newIconPath;
+  @override
+  final EditTarget target = EditTarget.both;
+
+  AppIconEdit(this.newIconPath);
+}
+
 sealed class Project {
   String get name;
   static Future<Project> fromDir(Directory directory) async {
@@ -122,6 +145,14 @@ final class ValidProject implements Project {
   final IosInfoPlist? iosInfoPlist;
   final AppBuildGradle? appBuildGradle;
   final IosXcodeProject? iosXcodeProject;
+  final ImageProvider? iosIconImage;
+  final ImageProvider? androidIconImage;
+  final String? replacementIconPath;
+
+  ImageProvider? get replacementPreviewImage {
+    if (replacementIconPath == null) return null;
+    return FileImage(directory.fileSystem.file(replacementIconPath!));
+  }
 
   ValidProject(
     this.directory, {
@@ -130,6 +161,9 @@ final class ValidProject implements Project {
     required this.iosInfoPlist,
     required this.appBuildGradle,
     required this.iosXcodeProject,
+    required this.iosIconImage,
+    required this.androidIconImage,
+    required this.replacementIconPath,
   }) : name = pathlib.split(directory.path).last;
 
   static Future<ValidProject> _fromDir(Directory directory) async {
@@ -139,7 +173,7 @@ final class ValidProject implements Project {
       appDirectory: directory,
       fileSystem: directory.fileSystem,
     );
-
+    final iconStore = IconStore(appDirectory: directory);
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
@@ -159,6 +193,9 @@ final class ValidProject implements Project {
           supportedPlatforms.contains(SupportedPlatform.ios)
               ? await configStore.loadIosXcodeProject()
               : null,
+      iosIconImage: (await iconStore.iosIconImage)?.imageProvider,
+      androidIconImage: (await iconStore.androidIconImage)?.imageProvider,
+      replacementIconPath: null,
     );
   }
 
@@ -181,7 +218,8 @@ final class ValidProject implements Project {
       (androidManifest?.isModified ?? false) ||
       (iosInfoPlist?.isModified ?? false) ||
       (appBuildGradle?.isModified ?? false) ||
-      (iosXcodeProject?.isModified ?? false);
+      (iosXcodeProject?.isModified ?? false) ||
+      (replacementIconPath != null);
 
   ValidProject _withNewAppName(
     String newName, {
@@ -200,6 +238,9 @@ final class ValidProject implements Project {
               : iosInfoPlist,
       appBuildGradle: appBuildGradle,
       iosXcodeProject: iosXcodeProject,
+      iosIconImage: iosIconImage,
+      androidIconImage: androidIconImage,
+      replacementIconPath: replacementIconPath,
     );
   }
 
@@ -220,6 +261,23 @@ final class ValidProject implements Project {
           editTarget.includesIos
               ? iosXcodeProject?.edit(bundleId: newApplicationId)
               : iosXcodeProject,
+      iosIconImage: iosIconImage,
+      androidIconImage: androidIconImage,
+      replacementIconPath: replacementIconPath,
+    );
+  }
+
+  ValidProject _withReplacementIconPath(String newIconPath) {
+    return ValidProject(
+      directory,
+      appBuildGradle: appBuildGradle,
+      iosXcodeProject: iosXcodeProject,
+      supportedPlatforms: supportedPlatforms,
+      androidManifest: androidManifest,
+      iosInfoPlist: iosInfoPlist,
+      iosIconImage: iosIconImage,
+      androidIconImage: androidIconImage,
+      replacementIconPath: newIconPath,
     );
   }
 }
@@ -231,4 +289,10 @@ final class InvalidProject implements Project {
 
   InvalidProject(this.path)
     : name = pathlib.split(path).lastWhere((e) => e.trim().isNotEmpty);
+}
+
+extension on File {
+  ImageProvider get imageProvider {
+    return FileImage(this);
+  }
 }

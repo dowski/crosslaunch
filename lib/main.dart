@@ -262,7 +262,14 @@ final class ProjectSettingsWidget extends StatelessWidget {
         const SizedBox(height: 8),
         _Separator(),
         const SizedBox(height: 8),
-        _AppIconsWidget(),
+        _AppIconsWidget(
+          iosAppIcon: project.iosIconImage,
+          androidAppIcon: project.androidIconImage,
+          previewReplacementIcon: project.replacementPreviewImage,
+          onReplacementImagePath: (path) {
+            context.read<AvailableProjects>().edit(project, AppIconEdit(path));
+          },
+        ),
       ],
     );
   }
@@ -304,7 +311,18 @@ class _Separator extends StatelessWidget {
 }
 
 class _AppIconsWidget extends StatelessWidget {
-  const _AppIconsWidget({super.key});
+  final ImageProvider? androidAppIcon;
+  final ImageProvider? iosAppIcon;
+  final ImageProvider? previewReplacementIcon;
+  final ValueChanged<String> onReplacementImagePath;
+
+  const _AppIconsWidget({
+    super.key,
+    required this.androidAppIcon,
+    required this.iosAppIcon,
+    this.previewReplacementIcon,
+    required this.onReplacementImagePath,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -335,7 +353,20 @@ class _AppIconsWidget extends StatelessWidget {
                         color: MacosColors.secondaryLabelColor.darkColor,
                       ),
                       SizedBox(width: 16),
-                      SizedBox(height: 64, width: 64, child: Placeholder()),
+                      SizedBox(
+                        height: 64,
+                        width: 64,
+                        child:
+                            iosAppIcon != null
+                                ? Image(
+                                  // TODO: figure out something nicer than this hack to force images to reload
+                                  key: ValueKey(
+                                    DateTime.now().millisecondsSinceEpoch,
+                                  ),
+                                  image: iosAppIcon!,
+                                )
+                                : null,
+                      ),
                     ],
                   ),
                 ),
@@ -347,7 +378,20 @@ class _AppIconsWidget extends StatelessWidget {
                         color: MacosColors.secondaryLabelColor.darkColor,
                       ),
                       SizedBox(width: 16),
-                      SizedBox(height: 64, width: 64, child: Placeholder())
+                      SizedBox(
+                        height: 64,
+                        width: 64,
+                        child:
+                            androidAppIcon != null
+                                ? Image(
+                                  key: ValueKey(
+                                    // TODO: figure out something nicer than this hack to force images to reload
+                                    DateTime.now().millisecondsSinceEpoch,
+                                  ),
+                                  image: androidAppIcon!,
+                                )
+                                : null,
+                      ),
                     ],
                   ),
                 ),
@@ -355,12 +399,35 @@ class _AppIconsWidget extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 1,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PushButton(controlSize: ControlSize.regular, onPressed: () {}, child: const Text('Choose')),
+                PushButton(
+                  controlSize: ControlSize.regular,
+                  onPressed: () async {
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.image,
+                    );
+                    if (result != null) {
+                      onReplacementImagePath(result.files.first.path!);
+                    }
+                  },
+                  child: const Text('Choose'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                if (previewReplacementIcon != null)
+                  SizedBox(
+                    height: 64,
+                    width: 64,
+                    child: Image(image: previewReplacementIcon!),
+                  ),
               ],
             ),
           ),
