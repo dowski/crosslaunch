@@ -154,8 +154,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: async-fix
-      resolved-ref: d617cfb61fe8683c24e5e93bc6f971d14caa9392
+      ref: master
+      resolved-ref: acd15d5abdb59cd3e372452a3ec02232947bca96
       url: "https://github.com/dowski/flutter_launcher_icons.git"
     source: git
     version: "0.14.3"

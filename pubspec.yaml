@@ -43,7 +43,7 @@ dependencies:
   flutter_launcher_icons:
     git:
       url: https://github.com/dowski/flutter_launcher_icons.git
-      ref: async-fix
+      ref: master
 
 dev_dependencies:
   flutter_test:
