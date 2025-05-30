@@ -45,6 +45,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MacosApp(
+      debugShowCheckedModeBanner: false,
       theme: MacosThemeData.light(),
       darkTheme: MacosThemeData.dark(),
       home: const MyHomePage(),
@@ -179,23 +180,8 @@ final class ProjectSettingsWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text('Project Settings', style: typography.title1),
-            if (project.supportedPlatforms.contains(SupportedPlatform.ios)) ...[
-              SizedBox(width: 4),
-              MacosIcon(
-                Icons.apple,
-                color: MacosColors.secondaryLabelColor.darkColor,
-              ),
-            ],
-            if (project.supportedPlatforms.contains(
-              SupportedPlatform.android,
-            )) ...[
-              SizedBox(width: 4),
-              MacosIcon(
-                Icons.android,
-                color: MacosColors.secondaryLabelColor.darkColor,
-              ),
-            ],
+            SizedBox(width: 16),
+            Text('Project Settings', style: typography.title3),
             Spacer(),
             PushButton(
               controlSize: ControlSize.regular,
