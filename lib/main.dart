@@ -120,10 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Home'),
-                        if (_docsDirectory != null) Text(_docsDirectory!.path),
-                        MacosIconButton(
-                          icon: MacosIcon(CupertinoIcons.add),
+                        PushButton(
+                          controlSize: ControlSize.regular,
                           onPressed: () async {
                             final path =
                                 await FilePicker.platform.getDirectoryPath();
@@ -133,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               });
                             }
                           },
+                          child: const Text('Open Project'),
                         ),
                       ],
                     ),
