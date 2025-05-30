@@ -317,7 +317,6 @@ class _AppIconsWidget extends StatelessWidget {
   final ValueChanged<String> onReplacementImagePath;
 
   const _AppIconsWidget({
-    super.key,
     required this.androidAppIcon,
     required this.iosAppIcon,
     this.previewReplacementIcon,
@@ -340,7 +339,7 @@ class _AppIconsWidget extends StatelessWidget {
           ),
           SizedBox(width: 8),
           Expanded(
-            flex: 2,
+            flex: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 8,
@@ -353,9 +352,16 @@ class _AppIconsWidget extends StatelessWidget {
                         color: MacosColors.secondaryLabelColor.darkColor,
                       ),
                       SizedBox(width: 16),
-                      SizedBox(
+                      Container(
                         height: 64,
                         width: 64,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: MacosColors.secondaryLabelColor.darkColor,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                        ),
                         child:
                             iosAppIcon != null
                                 ? Image(
@@ -378,9 +384,16 @@ class _AppIconsWidget extends StatelessWidget {
                         color: MacosColors.secondaryLabelColor.darkColor,
                       ),
                       SizedBox(width: 16),
-                      SizedBox(
+                      Container(
                         height: 64,
                         width: 64,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: MacosColors.secondaryLabelColor.darkColor,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                        ),
                         child:
                             androidAppIcon != null
                                 ? Image(
@@ -399,35 +412,45 @@ class _AppIconsWidget extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PushButton(
-                  controlSize: ControlSize.regular,
-                  onPressed: () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      type: FileType.image,
-                    );
-                    if (result != null) {
-                      onReplacementImagePath(result.files.first.path!);
-                    }
-                  },
-                  child: const Text('Choose'),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
+            flex: 3,
             child: Row(
               children: [
-                if (previewReplacementIcon != null)
-                  SizedBox(
-                    height: 64,
-                    width: 64,
-                    child: Image(image: previewReplacementIcon!),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    PushButton(
+                      controlSize: ControlSize.regular,
+                      onPressed: () async {
+                        final result = await FilePicker.platform.pickFiles(
+                          type: FileType.image,
+                        );
+                        if (result != null) {
+                          onReplacementImagePath(result.files.first.path!);
+                        }
+                      },
+                      child: const Text('Choose'),
+                    ),
+                  ],
+                ),
+                SizedBox(width: 8),
+                Text('Preview', style: typography.subheadline),
+                SizedBox(width: 8),
+                Container(
+                  height: 64,
+                  width: 64,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: MacosColors.secondaryLabelColor.darkColor,
+                      width: 1,
+                      style: BorderStyle.solid,
+                    ),
                   ),
+                  child:
+                      previewReplacementIcon != null
+                          ? Image(image: previewReplacementIcon!)
+                          : null,
+                ),
               ],
             ),
           ),
