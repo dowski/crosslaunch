@@ -9,7 +9,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:macos_ui/macos_ui.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 /// This method initializes macos_window_utils and styles the window.
@@ -62,20 +61,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _pageIndex = 0;
-  Directory? _docsDirectory;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDocsDirectory();
-  }
-
-  void _loadDocsDirectory() async {
-    final result = await getApplicationDocumentsDirectory();
-    setState(() {
-      _docsDirectory = result;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
