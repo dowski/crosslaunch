@@ -18,10 +18,11 @@ final class AvailableProjects {
   final _streamController = StreamController<List<Project>>.broadcast();
   Stream<List<Project>> get stream => _streamController.stream;
 
-  Future<void> add(String path) async {
+  Future<int> add(String path) async {
     final project = await Project.fromDir(fileSystem.directory(path));
     _current.add(project);
     _streamController.add(List.of(_current));
+    return _current.length;
   }
 
   void edit(ValidProject project, ProjectEdit edit) {

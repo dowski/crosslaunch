@@ -123,11 +123,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         PushButton(
                           controlSize: ControlSize.regular,
                           onPressed: () async {
+                            final availableProjects =
+                                context.read<AvailableProjects>();
                             final path =
                                 await FilePicker.platform.getDirectoryPath();
                             if (path != null) {
+                              final numProjects = await availableProjects.add(
+                                path,
+                              );
                               setState(() {
-                                context.read<AvailableProjects>().add(path);
+                                // Using the new project length as the index works because
+                                // the first item in the list is the Home page.
+                                _pageIndex = numProjects;
                               });
                             }
                           },
