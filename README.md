@@ -1,16 +1,26 @@
-# crosslaunch
+# Cross Launch
 
-A new Flutter project.
+A tool for simplifying cross-platform Flutter mobile releases.
 
-## Getting Started
+## Releasing
 
-This project is a starting point for a Flutter application.
+### MacOS
 
-A few resources to get you started if this is your first Flutter project:
+To release Cross Launch itself, do the following.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. `flutter build macos --release`
+2. `./release-script.sh` to sign the release
+3. `cd build/macos/Build/Release`
+4. `ditto -c -k --keepParent "Cross Launch.app" "Cross Launch.zip"`
+5. Run the following:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+    ```
+    xcrun notarytool submit "Cross Launch.zip" \
+    --keychain-profile "notarization-profile" \
+    --wait
+    ```
+6. `xcrun stapler staple "Cross Launch.app"`
+7. `spctl --assess --verbose "Cross Launch.app"`
+8. `./create-dmg.sh`
+9. `xcrun notarytool submit "Cross Launch.dmg" --keychain-profile "notarization-profile" --wait`
+10. `xcrun stapler staple "Cross Launch.dmg"`
