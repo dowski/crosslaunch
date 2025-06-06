@@ -59,39 +59,85 @@ class AndroidManifest {
 
 class AppBuildGradle {
   static final _appIdPattern = RegExp(r'(applicationId\s*=\s*")([^"]+)(")');
+  static final _versionNamePattern = RegExp(
+    r'(\s*versionName\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
+  );
+  static final _versionCodePattern = RegExp(
+    r'(\s*versionCode\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
+  );
 
   final String _originalAppId;
   final String? _newAppId;
+  final String _originalVersionName;
+  final String? _newVersionName;
+  final String _originalVersionCode;
+  final String? _newVersionCode;
   final String _sourceKts;
 
   AppBuildGradle._({
     required String appId,
+    required String versionName,
+    required String versionCode,
     required String kts,
     String? newAppId,
+    String? newVersionName,
+    String? newVersionCode,
   }) : _sourceKts = kts,
        _originalAppId = appId,
-       _newAppId = newAppId;
+       _newAppId = newAppId,
+       _originalVersionName = versionName,
+       _newVersionName = newVersionName,
+       _originalVersionCode = versionCode,
+       _newVersionCode = newVersionCode;
   factory AppBuildGradle.fromKts({required String kts}) {
+    final appId = SingleLineMatch(_appIdPattern);
+    final versionName = SingleLineMatch(_versionNamePattern);
+    final versionCode = SingleLineMatch(_versionCodePattern);
     for (final line in kts.split('\n')) {
-      final match = _appIdPattern.firstMatch(line);
-      if (match != null) {
-        return AppBuildGradle._(appId: match.group(2)!, kts: kts);
+      for (final matcher in [
+        appId,
+        versionName,
+        versionCode,
+      ].where((m) => m.isNotSatisfied)) {
+        if (matcher.tryLine(line)) {
+          break;
+        }
       }
     }
-    throw StateError('applicationId not found in kts');
+    return AppBuildGradle._(
+      appId: appId.value!,
+      versionName: versionName.value!,
+      versionCode: versionCode.value!,
+      kts: kts,
+    );
   }
 
   String get applicationId => _newAppId ?? _originalAppId;
-  bool get isModified => _newAppId != null && _newAppId != _originalAppId;
+  String get versionName => _newVersionName ?? _originalVersionName;
+  String get versionCode => _newVersionCode ?? _originalVersionCode;
+  bool get isModified =>
+      (_newAppId != null && _newAppId != _originalAppId) ||
+      (_newVersionName != null && _newVersionName != _originalVersionName) ||
+      (_newVersionCode != null && _newVersionCode != _originalVersionCode);
 
-  AppBuildGradle edit({String? appId}) {
-    if (appId == null || appId == applicationId) {
+  AppBuildGradle edit({
+    String? appId,
+    String? versionName,
+    String? versionCode,
+  }) {
+    if ((appId == null || appId == applicationId) &&
+        (versionName == null || versionName == this.versionName) &&
+        (versionCode == null || versionCode == this.versionCode)) {
       return this;
     }
     return AppBuildGradle._(
       appId: _originalAppId,
+      versionName: _originalVersionName,
+      versionCode: _originalVersionCode,
       kts: _sourceKts,
       newAppId: appId,
+      newVersionName: versionName,
+      newVersionCode: versionCode,
     );
   }
 }
@@ -424,20 +470,33 @@ class ConfigStore {
     if (!buildGradle.isModified) {
       return;
     }
+
+    final updates = [
+      SingleLineUpdate(AppBuildGradle._appIdPattern, buildGradle.applicationId),
+      SingleLineUpdate(
+        AppBuildGradle._versionNamePattern,
+        buildGradle.versionName,
+      ),
+      SingleLineUpdate(
+        AppBuildGradle._versionCodePattern,
+        buildGradle.versionCode,
+      ),
+    ];
     final modifiedKts = buildGradle._sourceKts
         .split('\n')
         .map((line) {
-          if (AppBuildGradle._appIdPattern.hasMatch(line)) {
-            return line.replaceFirstMapped(AppBuildGradle._appIdPattern, (
-              match,
-            ) {
-              return '${match.group(1)}${buildGradle.applicationId}${match.group(3)}';
-            });
+          for (final update in updates.where(
+            (update) => update.isNotSatisfied,
+          )) {
+            final updatedLine = update.tryReplace(line);
+            if (updatedLine != null) {
+              return updatedLine;
+            }
           }
           return line;
         })
         .join('\n');
-    final file = await _fileSystem.file(
+    final file = _fileSystem.file(
       pathlib.join(
         _appDirectory.path,
         ConfigFile.appBuildGradle.projectRelativePath,
@@ -505,6 +564,57 @@ class PlistFieldUpdate {
       });
     } else if (keyPattern.hasMatch(line)) {
       isKeyMatched = true;
+    }
+    return null;
+  }
+}
+
+abstract interface class LineMatch {
+  bool get isNotSatisfied;
+  String? get value;
+  bool tryLine(String line);
+}
+
+class SingleLineMatch implements LineMatch {
+  final RegExp _pattern;
+
+  @override
+  bool get isNotSatisfied => !_isSatisfied;
+  @override
+  String? value;
+  bool _isSatisfied = false;
+
+  SingleLineMatch(this._pattern);
+
+  @override
+  bool tryLine(String line) {
+    if (_isSatisfied) throw StateError('called tryLine when satisfied');
+    final match = _pattern.firstMatch(line);
+    if (match != null) {
+      _isSatisfied = true;
+      value = match.group(2);
+      return true;
+    }
+    return false;
+  }
+}
+
+class SingleLineUpdate {
+  final RegExp _pattern;
+  final String newValue;
+
+  bool get isNotSatisfied => !_isSatisfied;
+  bool _isSatisfied = false;
+
+  SingleLineUpdate(this._pattern, this.newValue);
+
+  String? tryReplace(String line) {
+    if (_pattern.hasMatch(line)) {
+      _isSatisfied = true;
+
+      return line.replaceFirstMapped(_pattern, (match) {
+        return '${match.group(1)}$newValue${match.group(3)}';
+      });
     }
     return null;
   }

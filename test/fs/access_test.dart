@@ -155,7 +155,11 @@ void main() {
         final infoPlist = await configStore.loadIosInfoPlist();
 
         await configStore.saveIosInfoPlist(
-          infoPlist.edit(displayName: 'fancy_app', versionName: '2.0.0', versionNumber: '1'),
+          infoPlist.edit(
+            displayName: 'fancy_app',
+            versionName: '2.0.0',
+            versionNumber: '1',
+          ),
         );
         final updatedInfoPlist = await configStore.loadIosInfoPlist();
 
@@ -209,11 +213,17 @@ void main() {
         final buildGradle = await configStore.loadAppBuildGradle();
 
         await configStore.saveAppBuildGradle(
-          buildGradle.edit(appId: 'com.example.fancy_app'),
+          buildGradle.edit(
+            appId: 'com.example.fancy_app',
+            versionCode: '4',
+            versionName: '2.0.0',
+          ),
         );
         final updatedBuildGradle = await configStore.loadAppBuildGradle();
 
         expect(updatedBuildGradle.applicationId, 'com.example.fancy_app');
+        expect(updatedBuildGradle.versionCode, '4');
+        expect(updatedBuildGradle.versionName, '2.0.0');
       });
 
       test('loads IosXcodeProject successfully', () async {
@@ -405,10 +415,12 @@ void main() {
   });
 
   group(AppBuildGradle, () {
-    test('reads applicationId from build.gradle.kts', () {
+    test('reads field values from build.gradle.kts', () {
       final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
 
       expect(appBuildGradle.applicationId, 'com.example.flutter_app');
+      expect(appBuildGradle.versionName, 'flutter.versionName');
+      expect(appBuildGradle.versionCode, 'flutter.versionCode');
     });
 
     test('is not marked as modified after creation', () {
