@@ -104,36 +104,45 @@ class IosInfoPlist {
   static final _versionStringKeyPattern = RegExp(
     r'<key>CFBundleShortVersionString</key>',
   );
+  static final _versionNumberKeyPattern = RegExp(r'<key>CFBundleVersion</key>');
 
   final String _originalDisplayName;
   final String? _newDisplayName;
   final String _originalVersionString;
   final String? _newVersionString;
+  final String _originalVersionNumber;
+  final String? _newVersionNumber;
   final String _sourceXml;
 
   IosInfoPlist._({
     required String displayName,
     required String versionString,
+    required String versionNumber,
     required String xml,
     String? newDisplayName,
     String? newVersionString,
+    String? newVersionNumber,
   }) : _sourceXml = xml,
        _newDisplayName = newDisplayName,
        _originalDisplayName = displayName,
        _newVersionString = newVersionString,
-       _originalVersionString = versionString;
+       _originalVersionString = versionString,
+       _newVersionNumber = newVersionNumber,
+       _originalVersionNumber = versionNumber;
   factory IosInfoPlist.fromXml({required String xml}) {
     var lookingForDisplayName = false;
     var lookingForVersionString = false;
+    var lookingForVersionNumber = false;
     String? displayName;
     String? versionString;
+    String? versionNumber;
     for (final line in xml.split('\n')) {
       if (lookingForDisplayName && displayName == null) {
         final match = _valuePattern.firstMatch(line);
         if (match != null) {
           displayName = match.group(2);
         }
-      } else if (_displayNameKeyPattern.hasMatch(line)) {
+      } else if (displayName == null && _displayNameKeyPattern.hasMatch(line)) {
         lookingForDisplayName = true;
         continue;
       }
@@ -142,40 +151,61 @@ class IosInfoPlist {
         if (match != null) {
           versionString = match.group(2);
         }
-      } else if (_versionStringKeyPattern.hasMatch(line)) {
+      } else if (versionString == null &&
+          _versionStringKeyPattern.hasMatch(line)) {
         lookingForVersionString = true;
       }
+      if (lookingForVersionNumber && versionNumber == null) {
+        final match = _valuePattern.firstMatch(line);
+        if (match != null) {
+          versionNumber = match.group(2);
+        }
+      } else if (versionNumber == null &&
+          _versionNumberKeyPattern.hasMatch(line)) {
+        lookingForVersionNumber = true;
+      }
     }
-    if (displayName != null && versionString != null) {
+    if (displayName != null && versionString != null && versionNumber != null) {
       return IosInfoPlist._(
         displayName: displayName,
         versionString: versionString,
+        versionNumber: versionNumber,
         xml: xml,
       );
     }
     throw StateError('values missing in xml');
   }
 
-  IosInfoPlist edit({String? displayName, String? versionName}) {
+  IosInfoPlist edit({
+    String? displayName,
+    String? versionName,
+    String? versionNumber,
+  }) {
     if ((displayName == null || displayName == this.displayName) &&
-        (versionName == null || versionName == this.versionName)) {
+        (versionName == null || versionName == this.versionName) &&
+        (versionNumber == null || versionNumber == this.versionNumber)) {
       return this;
     }
     return IosInfoPlist._(
       displayName: _originalDisplayName,
       versionString: _originalVersionString,
+      versionNumber: _originalVersionNumber,
       xml: _sourceXml,
       newDisplayName: displayName,
       newVersionString: versionName,
+      newVersionNumber: versionNumber,
     );
   }
 
   bool get isModified =>
       (_newDisplayName != null && _newDisplayName != _originalDisplayName) ||
       (_newVersionString != null &&
-          _newVersionString != _originalVersionString);
+          _newVersionString != _originalVersionString) ||
+      (_newVersionNumber != null &&
+          _newVersionNumber != _originalVersionNumber);
   String get displayName => _newDisplayName ?? _originalDisplayName;
   String get versionName => _newVersionString ?? _originalVersionString;
+  String get versionNumber => _newVersionNumber ?? _originalVersionNumber;
 }
 
 class IosXcodeProject {
@@ -339,28 +369,33 @@ class ConfigStore {
     if (!infoPlist.isModified) {
       return;
     }
-    var shouldWriteDisplayName = false;
-    var shouldWriteVersionName = false;
+    final fieldUpdates = [
+      PlistFieldUpdate(
+        keyPattern: IosInfoPlist._displayNameKeyPattern,
+        valuePattern: IosInfoPlist._valuePattern,
+        newValue: infoPlist.displayName,
+      ),
+      PlistFieldUpdate(
+        keyPattern: IosInfoPlist._versionStringKeyPattern,
+        valuePattern: IosInfoPlist._valuePattern,
+        newValue: infoPlist.versionName,
+      ),
+      PlistFieldUpdate(
+        keyPattern: IosInfoPlist._versionNumberKeyPattern,
+        valuePattern: IosInfoPlist._valuePattern,
+        newValue: infoPlist.versionNumber,
+      ),
+    ];
     final modifiedXml = infoPlist._sourceXml
         .split('\n')
         .map((line) {
-          if (shouldWriteDisplayName &&
-              IosInfoPlist._valuePattern.hasMatch(line)) {
-            shouldWriteDisplayName = false;
-            return line.replaceFirstMapped(IosInfoPlist._valuePattern, (match) {
-              return '${match.group(1)}${infoPlist.displayName}${match.group(3)}';
-            });
-          } else if (IosInfoPlist._displayNameKeyPattern.hasMatch(line)) {
-            shouldWriteDisplayName = true;
-          }
-          if (shouldWriteVersionName &&
-              IosInfoPlist._valuePattern.hasMatch(line)) {
-            shouldWriteVersionName = false;
-            return line.replaceFirstMapped(IosInfoPlist._valuePattern, (match) {
-              return '${match.group(1)}${infoPlist.versionName}${match.group(3)}';
-            });
-          } else if (IosInfoPlist._versionStringKeyPattern.hasMatch(line)) {
-            shouldWriteVersionName = true;
+          for (final update in fieldUpdates) {
+            if (!update.isApplied) {
+              final updatedLine = update.updateLine(line);
+              if (updatedLine != null) {
+                return updatedLine;
+              }
+            }
           }
           return line;
         })
@@ -446,5 +481,31 @@ class ConfigStore {
       ),
     );
     await file.writeAsString(modifiedPbxproj);
+  }
+}
+
+class PlistFieldUpdate {
+  final RegExp keyPattern;
+  final RegExp valuePattern;
+  final String newValue;
+  var isKeyMatched = false;
+  var isApplied = false;
+
+  PlistFieldUpdate({
+    required this.keyPattern,
+    required this.valuePattern,
+    required this.newValue,
+  });
+
+  String? updateLine(String line) {
+    if (isKeyMatched && valuePattern.hasMatch(line)) {
+      isApplied = true;
+      return line.replaceFirstMapped(IosInfoPlist._valuePattern, (match) {
+        return '${match.group(1)}$newValue${match.group(3)}';
+      });
+    } else if (keyPattern.hasMatch(line)) {
+      isKeyMatched = true;
+    }
+    return null;
   }
 }

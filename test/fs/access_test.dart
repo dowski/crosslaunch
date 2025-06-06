@@ -155,12 +155,13 @@ void main() {
         final infoPlist = await configStore.loadIosInfoPlist();
 
         await configStore.saveIosInfoPlist(
-          infoPlist.edit(displayName: 'fancy_app', versionName: '2.0.0'),
+          infoPlist.edit(displayName: 'fancy_app', versionName: '2.0.0', versionNumber: '1'),
         );
         final updatedInfoPlist = await configStore.loadIosInfoPlist();
 
         expect(updatedInfoPlist.displayName, 'fancy_app');
         expect(updatedInfoPlist.versionName, '2.0.0');
+        expect(updatedInfoPlist.versionNumber, '1');
       });
 
       test('writing Info.plist only touches correct fields', () async {
@@ -553,12 +554,16 @@ const _infoPlistLeadingTrailingContent = r'''
         <!-- pre comment --><string>flutter_app</string> <!-- post comment -->
         <!-- pre comment --><key>CFBundleShortVersionString</key> <!-- post comment -->
         <!-- pre comment --><string>$(FLUTTER_BUILD_NAME)</string> <!-- post comment -->
+        <!-- pre comment --><key>CFBundleVersion</key> <!-- post comment -->
+        <!-- pre comment --><string>$(FLUTTER_BUILD_NUMBER)</string> <!-- post comment -->
 ''';
 const _infoPlistLeadingTrailingContentUpdated = r'''
         <!-- pre comment --><key>CFBundleDisplayName</key> <!-- post comment -->
         <!-- pre comment --><string>fancy_app</string> <!-- post comment -->
         <!-- pre comment --><key>CFBundleShortVersionString</key> <!-- post comment -->
         <!-- pre comment --><string>$(FLUTTER_BUILD_NAME)</string> <!-- post comment -->
+        <!-- pre comment --><key>CFBundleVersion</key> <!-- post comment -->
+        <!-- pre comment --><string>$(FLUTTER_BUILD_NUMBER)</string> <!-- post comment -->
 ''';
 const _xcodeProjectSample = r'''
                                 PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
