@@ -8,7 +8,8 @@ enum ConfigFile {
   ),
   iosInfoPlist(projectRelativePath: 'ios/Runner/Info.plist'),
   appBuildGradle(projectRelativePath: 'android/app/build.gradle.kts'),
-  iosXcodeProject(projectRelativePath: 'ios/Runner.xcodeproj/project.pbxproj');
+  iosXcodeProject(projectRelativePath: 'ios/Runner.xcodeproj/project.pbxproj'),
+  pubspecYaml(projectRelativePath: 'pubspec.yaml');
 
   final String projectRelativePath;
 
@@ -100,47 +101,81 @@ class IosInfoPlist {
   static final _displayNameKeyPattern = RegExp(
     r'<key>CFBundleDisplayName</key>',
   );
+  static final _versionStringKeyPattern = RegExp(
+    r'<key>CFBundleShortVersionString</key>',
+  );
 
   final String _originalDisplayName;
   final String? _newDisplayName;
+  final String _originalVersionString;
+  final String? _newVersionString;
   final String _sourceXml;
 
   IosInfoPlist._({
     required String displayName,
+    required String versionString,
     required String xml,
     String? newDisplayName,
+    String? newVersionString,
   }) : _sourceXml = xml,
        _newDisplayName = newDisplayName,
-       _originalDisplayName = displayName;
+       _originalDisplayName = displayName,
+       _newVersionString = newVersionString,
+       _originalVersionString = versionString;
   factory IosInfoPlist.fromXml({required String xml}) {
-    var lookingForValue = false;
+    var lookingForDisplayName = false;
+    var lookingForVersionString = false;
+    String? displayName;
+    String? versionString;
     for (final line in xml.split('\n')) {
-      if (lookingForValue) {
+      if (lookingForDisplayName && displayName == null) {
         final match = _valuePattern.firstMatch(line);
         if (match != null) {
-          return IosInfoPlist._(displayName: match.group(2)!, xml: xml);
+          displayName = match.group(2);
         }
       } else if (_displayNameKeyPattern.hasMatch(line)) {
-        lookingForValue = true;
+        lookingForDisplayName = true;
+        continue;
+      }
+      if (lookingForVersionString && versionString == null) {
+        final match = _valuePattern.firstMatch(line);
+        if (match != null) {
+          versionString = match.group(2);
+        }
+      } else if (_versionStringKeyPattern.hasMatch(line)) {
+        lookingForVersionString = true;
       }
     }
-    throw StateError('CFBundleDisplayName not found in xml');
+    if (displayName != null && versionString != null) {
+      return IosInfoPlist._(
+        displayName: displayName,
+        versionString: versionString,
+        xml: xml,
+      );
+    }
+    throw StateError('values missing in xml');
   }
 
-  IosInfoPlist edit({String? displayName}) {
-    if (displayName == null || displayName == this.displayName) {
+  IosInfoPlist edit({String? displayName, String? versionName}) {
+    if ((displayName == null || displayName == this.displayName) &&
+        (versionName == null || versionName == this.versionName)) {
       return this;
     }
     return IosInfoPlist._(
       displayName: _originalDisplayName,
+      versionString: _originalVersionString,
       xml: _sourceXml,
       newDisplayName: displayName,
+      newVersionString: versionName,
     );
   }
 
   bool get isModified =>
-      _newDisplayName != null && _newDisplayName != _originalDisplayName;
+      (_newDisplayName != null && _newDisplayName != _originalDisplayName) ||
+      (_newVersionString != null &&
+          _newVersionString != _originalVersionString);
   String get displayName => _newDisplayName ?? _originalDisplayName;
+  String get versionName => _newVersionString ?? _originalVersionString;
 }
 
 class IosXcodeProject {
@@ -180,8 +215,66 @@ class IosXcodeProject {
     );
   }
 
-  bool get isModified => _newBundleId != null && _newBundleId != _originalBundleId;
+  bool get isModified =>
+      _newBundleId != null && _newBundleId != _originalBundleId;
   String get bundleId => _newBundleId ?? _originalBundleId;
+}
+
+class PubspecYaml {
+  static final _versionPattern = RegExp(r'version:\s*(\d+\.\d+\.\d+)\+(\d+)');
+
+  final String _originalVersionName;
+  final String _originalVersionCode;
+  final String? _newVersionName;
+  final String? _newVersionCode;
+  final String _sourceYaml;
+
+  PubspecYaml._({
+    required String versionName,
+    required String versionCode,
+    required String yaml,
+    String? newVersionName,
+    String? newVersionCode,
+  }) : _sourceYaml = yaml,
+       _originalVersionName = versionName,
+       _originalVersionCode = versionCode,
+       _newVersionName = newVersionName,
+       _newVersionCode = newVersionCode;
+
+  factory PubspecYaml.fromYaml({required String yaml}) {
+    for (final line in yaml.split('\n')) {
+      final match = _versionPattern.firstMatch(line);
+      if (match != null) {
+        return PubspecYaml._(
+          versionName: match.group(1)!,
+          versionCode: match.group(2)!,
+          yaml: yaml,
+        );
+      }
+    }
+    throw StateError('version not found in pubspec.yaml');
+  }
+
+  String get versionName => _newVersionName ?? _originalVersionName;
+  String get versionCode => _newVersionCode ?? _originalVersionCode;
+
+  bool get isModified =>
+      (_newVersionName != null && _newVersionName != _originalVersionName) ||
+      (_newVersionCode != null && _newVersionCode != _originalVersionCode);
+
+  PubspecYaml edit({String? versionName, String? versionCode}) {
+    if ((versionName == null || versionName == this.versionName) &&
+        (versionCode == null || versionCode == this.versionCode)) {
+      return this;
+    }
+    return PubspecYaml._(
+      versionName: _originalVersionName,
+      versionCode: _originalVersionCode,
+      yaml: _sourceYaml,
+      newVersionName: versionName,
+      newVersionCode: versionCode,
+    );
+  }
 }
 
 class ConfigStore {
@@ -246,17 +339,28 @@ class ConfigStore {
     if (!infoPlist.isModified) {
       return;
     }
-    var shouldWriteValue = false;
+    var shouldWriteDisplayName = false;
+    var shouldWriteVersionName = false;
     final modifiedXml = infoPlist._sourceXml
         .split('\n')
         .map((line) {
-          if (shouldWriteValue && IosInfoPlist._valuePattern.hasMatch(line)) {
-            shouldWriteValue = false;
+          if (shouldWriteDisplayName &&
+              IosInfoPlist._valuePattern.hasMatch(line)) {
+            shouldWriteDisplayName = false;
             return line.replaceFirstMapped(IosInfoPlist._valuePattern, (match) {
               return '${match.group(1)}${infoPlist.displayName}${match.group(3)}';
             });
           } else if (IosInfoPlist._displayNameKeyPattern.hasMatch(line)) {
-            shouldWriteValue = true;
+            shouldWriteDisplayName = true;
+          }
+          if (shouldWriteVersionName &&
+              IosInfoPlist._valuePattern.hasMatch(line)) {
+            shouldWriteVersionName = false;
+            return line.replaceFirstMapped(IosInfoPlist._valuePattern, (match) {
+              return '${match.group(1)}${infoPlist.versionName}${match.group(3)}';
+            });
+          } else if (IosInfoPlist._versionStringKeyPattern.hasMatch(line)) {
+            shouldWriteVersionName = true;
           }
           return line;
         })
@@ -312,7 +416,8 @@ class ConfigStore {
       pathlib.join(
         _appDirectory.path,
         ConfigFile.iosXcodeProject.projectRelativePath,
-      ));
+      ),
+    );
     final contents = await file.readAsString();
     return IosXcodeProject.fromPbxproj(pbxproj: contents);
   }

@@ -80,7 +80,7 @@ void main() {
           )
           .create(recursive: true);
       weirdXcodeProjectFile.writeAsString(_xcodeProjectSample);
-  });
+    });
 
     group(ConfigStore, () {
       test('loads AndroidManifest successfully', () async {
@@ -155,11 +155,12 @@ void main() {
         final infoPlist = await configStore.loadIosInfoPlist();
 
         await configStore.saveIosInfoPlist(
-          infoPlist.edit(displayName: 'fancy_app'),
+          infoPlist.edit(displayName: 'fancy_app', versionName: '2.0.0'),
         );
         final updatedInfoPlist = await configStore.loadIosInfoPlist();
 
         expect(updatedInfoPlist.displayName, 'fancy_app');
+        expect(updatedInfoPlist.versionName, '2.0.0');
       });
 
       test('writing Info.plist only touches correct fields', () async {
@@ -236,13 +237,9 @@ void main() {
         await configStore.saveIosXcodeProject(
           xcodeProject.edit(bundleId: 'com.example.fancy_app'),
         );
-        final updatedXcodeProject =
-            await configStore.loadIosXcodeProject();
+        final updatedXcodeProject = await configStore.loadIosXcodeProject();
 
-        expect(
-          updatedXcodeProject.bundleId,
-          'com.example.fancy_app',
-        );
+        expect(updatedXcodeProject.bundleId, 'com.example.fancy_app');
       });
 
       test('writing XcodeProject only touches correct fields', () async {
@@ -332,6 +329,12 @@ void main() {
       expect(infoPlist.displayName, 'flutter_app');
     });
 
+    test('reads CFBundleShortVersionString from XML', () {
+      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+
+      expect(infoPlist.versionName, r'$(FLUTTER_BUILD_NAME)');
+    });
+
     test('is not marked as modified after creation', () {
       final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
 
@@ -344,6 +347,14 @@ void main() {
 
       expect(updatedInfoPlist.isModified, true);
       expect(updatedInfoPlist.displayName, 'fancy_app');
+    });
+
+    test('can modify the version name', () {
+      final originalInfoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+      final updatedInfoPlist = originalInfoPlist.edit(versionName: '2.0.0');
+
+      expect(updatedInfoPlist.isModified, true);
+      expect(updatedInfoPlist.versionName, '2.0.0');
     });
 
     test('modification doesn\'t impact the original', () {
@@ -363,6 +374,20 @@ void main() {
 
         expect(originalInfoPlist, noopEdit);
         expect(sameNameEdit, originalInfoPlist);
+      },
+    );
+
+    test(
+      'setting the same or null value for the version name returns equivalent instance',
+      () {
+        final originalInfoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+        final noopEdit = originalInfoPlist.edit();
+        final sameVersionEdit = originalInfoPlist.edit(
+          versionName: r'$(FLUTTER_BUILD_NAME)',
+        );
+
+        expect(originalInfoPlist, noopEdit);
+        expect(sameVersionEdit, originalInfoPlist);
       },
     );
 
@@ -432,7 +457,7 @@ void main() {
     test('editing and reverting back to the original works', () {
       final originalAppBuildGradle = AppBuildGradle.fromKts(
         kts: androidAppBuildGradle,
-        );
+      );
       final changedAppBuildGradle = originalAppBuildGradle.edit(
         appId: 'com.example.fancy_app',
       );
@@ -523,13 +548,17 @@ const _manifestSingleLineApp = '''
 const _manifestSingleLineUpdated = '''
     <application android:label="fancy_app" android:name="blah" android:icon="@mipmap/launcher_icon">
 ''';
-const _infoPlistLeadingTrailingContent = '''
+const _infoPlistLeadingTrailingContent = r'''
         <!-- pre comment --><key>CFBundleDisplayName</key> <!-- post comment -->
         <!-- pre comment --><string>flutter_app</string> <!-- post comment -->
+        <!-- pre comment --><key>CFBundleShortVersionString</key> <!-- post comment -->
+        <!-- pre comment --><string>$(FLUTTER_BUILD_NAME)</string> <!-- post comment -->
 ''';
-const _infoPlistLeadingTrailingContentUpdated = '''
+const _infoPlistLeadingTrailingContentUpdated = r'''
         <!-- pre comment --><key>CFBundleDisplayName</key> <!-- post comment -->
         <!-- pre comment --><string>fancy_app</string> <!-- post comment -->
+        <!-- pre comment --><key>CFBundleShortVersionString</key> <!-- post comment -->
+        <!-- pre comment --><string>$(FLUTTER_BUILD_NAME)</string> <!-- post comment -->
 ''';
 const _xcodeProjectSample = r'''
                                 PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterApp;
