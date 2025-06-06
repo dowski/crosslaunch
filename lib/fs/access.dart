@@ -162,6 +162,12 @@ class AppBuildGradle {
     return appIdModified || versionNameModified || versionCodeModified;
   }
 
+  bool get isVersionNameFromPubspec =>
+      versionName == 'flutter.versionName';
+
+  bool get isVersionCodeFromPubspec =>
+      versionCode == 'flutter.versionCode';
+
   AppBuildGradle edit({
     String? appId, // Semantic value
     String? versionName, // Semantic value
@@ -300,6 +306,13 @@ class IosInfoPlist {
           _newVersionString != _originalVersionString) ||
       (_newVersionNumber != null &&
           _newVersionNumber != _originalVersionNumber);
+
+  bool get isVersionNameFromPubspec =>
+      versionName == r'$(FLUTTER_BUILD_NAME)';
+
+  bool get isVersionNumberFromPubspec =>
+      versionNumber == r'$(FLUTTER_BUILD_NUMBER)';
+
   String get displayName => _newDisplayName ?? _originalDisplayName;
   String get versionName => _newVersionString ?? _originalVersionString;
   String get versionNumber => _newVersionNumber ?? _originalVersionNumber;

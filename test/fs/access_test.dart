@@ -461,6 +461,54 @@ void main() {
       expect(infoPlist.versionName, r'$(FLUTTER_BUILD_NAME)');
     });
 
+    test(
+        'isVersionNameFromPubspec and isVersionNumberFromPubspec are true for default values',
+        () {
+      // Arrange
+      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+
+      // Act & Assert
+      expect(infoPlist.isVersionNameFromPubspec, isTrue);
+      expect(infoPlist.isVersionNumberFromPubspec, isTrue);
+    });
+
+    test(
+        'isVersionNameFromPubspec and isVersionNumberFromPubspec are false when edited to literals',
+        () {
+      // Arrange
+      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
+
+      // Act
+      final modified = infoPlist.edit(versionName: '1.2.3', versionNumber: '4');
+
+      // Assert
+      expect(modified.isVersionNameFromPubspec, isFalse);
+      expect(modified.isVersionNumberFromPubspec, isFalse);
+    });
+
+    test(
+        'isVersionNameFromPubspec and isVersionNumberFromPubspec revert to true when edited back to pubspec references',
+        () {
+      // Arrange
+      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist)
+          .edit(versionName: '1.2.3', versionNumber: '4'); // Start with non-pubspec values
+
+      // Act
+      final backToPubspecName =
+          infoPlist.edit(versionName: r'$(FLUTTER_BUILD_NAME)');
+      final backToPubspecNumber =
+          infoPlist.edit(versionNumber: r'$(FLUTTER_BUILD_NUMBER)');
+      final bothReverted = infoPlist.edit(
+          versionName: r'$(FLUTTER_BUILD_NAME)',
+          versionNumber: r'$(FLUTTER_BUILD_NUMBER)');
+
+      // Assert
+      expect(backToPubspecName.isVersionNameFromPubspec, isTrue);
+      expect(backToPubspecNumber.isVersionNumberFromPubspec, isTrue);
+      expect(bothReverted.isVersionNameFromPubspec, isTrue);
+      expect(bothReverted.isVersionNumberFromPubspec, isTrue);
+    });
+
     test('is not marked as modified after creation', () {
       final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
 
@@ -536,6 +584,48 @@ void main() {
       expect(appBuildGradle.applicationId, 'com.example.flutter_app');
       expect(appBuildGradle.versionName, 'flutter.versionName');
       expect(appBuildGradle.versionCode, 'flutter.versionCode');
+    });
+
+    test(
+        'isVersionNameFromPubspec and isVersionCodeFromPubspec are true for default values',
+        () {
+      // Arrange
+      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
+
+      // Act & Assert
+      expect(appBuildGradle.isVersionNameFromPubspec, isTrue);
+      expect(appBuildGradle.isVersionCodeFromPubspec, isTrue);
+    });
+
+    test(
+        'isVersionNameFromPubspec and isVersionCodeFromPubspec are false when edited to literals',
+        () {
+      // Arrange
+      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
+
+      // Act
+      final modified =
+          appBuildGradle.edit(versionName: '1.2.3', versionCode: '4');
+
+      // Assert
+      expect(modified.isVersionNameFromPubspec, isFalse);
+      expect(modified.isVersionCodeFromPubspec, isFalse);
+    });
+
+    test(
+        'isVersionNameFromPubspec and isVersionCodeFromPubspec revert to true when edited back to pubspec references',
+        () {
+      // Arrange
+      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle)
+          .edit(versionName: '1.2.3', versionCode: '4'); // Start with non-pubspec values
+
+      // Act
+      final reverted = appBuildGradle.edit(
+          versionName: 'flutter.versionName', versionCode: 'flutter.versionCode');
+
+      // Assert
+      expect(reverted.isVersionNameFromPubspec, isTrue);
+      expect(reverted.isVersionCodeFromPubspec, isTrue);
     });
 
     test('is not marked as modified after creation', () {
