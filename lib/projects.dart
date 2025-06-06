@@ -46,8 +46,8 @@ final class AvailableProjects {
         _replaceProject(current: project, updated: updatedProject);
       case PubspecEdit edit:
         final updatedProject = project._withNewPubspecValues(
-          versionName: edit.versionName,
-          versionCode: edit.versionCode,
+          versionName: edit.versionName ?? project.pubspecYaml?.versionName,
+          versionCode: edit.versionCode ?? project.pubspecYaml?.versionCode,
         );
         _replaceProject(current: project, updated: updatedProject);
     }
