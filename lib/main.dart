@@ -253,23 +253,25 @@ final class ProjectSettingsWidget extends StatelessWidget {
         SingleTextField(
           label: 'Visible version',
           initialValue: project.pubspecYaml?.versionName ?? '',
-          onChanged: (value) => context.read<AvailableProjects>().edit(
-            project,
-            PubspecEdit(
-              versionName: value,
-            ),
-          ),
+          onChanged:
+              (value) => context.read<AvailableProjects>().edit(
+                project,
+                PubspecEdit(versionName: value),
+              ),
+          trailing:
+              project.isVisibleVersionFromPubspec ? null : const _WarningWidget(),
         ),
         const SizedBox(height: 8),
         SingleTextField(
           label: 'Internal version',
           initialValue: project.pubspecYaml?.versionCode ?? '',
-          onChanged: (value) => context.read<AvailableProjects>().edit(
-            project,
-            PubspecEdit(
-              versionCode: value,
-            ),
-          ),
+          onChanged:
+              (value) => context.read<AvailableProjects>().edit(
+                project,
+                PubspecEdit(versionCode: value),
+              ),
+          trailing:
+              project.isInternalVersionFromPubspec ? null : const _WarningWidget(),
         ),
       ],
     );
@@ -457,6 +459,18 @@ class _AppIconsWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _WarningWidget extends StatelessWidget {
+  const _WarningWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return MacosIcon(
+      CupertinoIcons.exclamationmark_circle,
+      color: MacosColors.systemYellowColor.darkColor,
     );
   }
 }

@@ -59,8 +59,7 @@ class AndroidManifest {
 
 class AppBuildGradle {
   // Group 2 is the value *inside* quotes for appId
-  static final _appIdPattern =
-      RegExp(r'(applicationId\s*=\s*")([^"]+)(")');
+  static final _appIdPattern = RegExp(r'(applicationId\s*=\s*")([^"]+)(")');
   // Group 2 is the raw value (could be "literal" or a.reference)
   static final _versionNamePattern = RegExp(
     r'(\s*versionName\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
@@ -70,8 +69,9 @@ class AppBuildGradle {
     r'(\s*versionCode\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
   );
 
-  static final _likelyVariableReferencePattern =
-      RegExp(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$');
+  static final _likelyVariableReferencePattern = RegExp(
+    r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$',
+  );
 
   // Store RAW values as they appear/should appear in the file
   final String _originalRawAppId;
@@ -155,18 +155,18 @@ class AppBuildGradle {
   bool get isModified {
     final appIdModified =
         _newRawAppId != null && _newRawAppId != _originalRawAppId;
-    final versionNameModified = _newRawVersionName != null &&
+    final versionNameModified =
+        _newRawVersionName != null &&
         _newRawVersionName != _originalRawVersionName;
-    final versionCodeModified = _newRawVersionCode != null &&
+    final versionCodeModified =
+        _newRawVersionCode != null &&
         _newRawVersionCode != _originalRawVersionCode;
     return appIdModified || versionNameModified || versionCodeModified;
   }
 
-  bool get isVersionNameFromPubspec =>
-      versionName == 'flutter.versionName';
+  bool get isVersionNameFromPubspec => versionName == 'flutter.versionName';
 
-  bool get isVersionCodeFromPubspec =>
-      versionCode == 'flutter.versionCode';
+  bool get isVersionCodeFromPubspec => versionCode == 'flutter.versionCode';
 
   AppBuildGradle edit({
     String? appId, // Semantic value
@@ -190,11 +190,11 @@ class AppBuildGradle {
       rawVersionCode: _originalRawVersionCode,
       kts: _sourceKts,
       newRawAppId: appId != null ? appId : _newRawAppId,
-      newRawVersionName: versionName != null
-          ? _semanticToRawVersionName(versionName)
-          : _newRawVersionName,
-      newRawVersionCode:
-          versionCode != null ? versionCode : _newRawVersionCode,
+      newRawVersionName:
+          versionName != null
+              ? _semanticToRawVersionName(versionName)
+              : _newRawVersionName,
+      newRawVersionCode: versionCode != null ? versionCode : _newRawVersionCode,
     );
   }
 }
@@ -307,8 +307,7 @@ class IosInfoPlist {
       (_newVersionNumber != null &&
           _newVersionNumber != _originalVersionNumber);
 
-  bool get isVersionNameFromPubspec =>
-      versionName == r'$(FLUTTER_BUILD_NAME)';
+  bool get isVersionNameFromPubspec => versionName == r'$(FLUTTER_BUILD_NAME)';
 
   bool get isVersionNumberFromPubspec =>
       versionNumber == r'$(FLUTTER_BUILD_NUMBER)';
@@ -362,8 +361,9 @@ class IosXcodeProject {
 
 class PubspecYaml {
   // Captures: (1: "version:\s*") (2: versionName) (3: "+") (4: versionCode) (5: trailing text)
-  static final _versionPattern =
-      RegExp(r'(version:\s*)(\d+\.\d+\.\d+)(\+)(\d+)(.*)');
+  static final _versionPattern = RegExp(
+    r'(version:\s*)(\d+\.\d+\.\d+)(\+)(\d+)(.*)',
+  );
 
   final String _originalVersionName;
   final String _originalVersionCode;

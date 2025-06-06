@@ -5,11 +5,13 @@ final class SingleTextField extends StatefulWidget {
   final String label;
   final String initialValue;
   final ValueChanged<String>? onChanged;
+  final Widget? trailing;
 
   const SingleTextField({
     super.key,
     required this.label,
     required this.initialValue,
+    this.trailing,
     this.onChanged,
   });
 
@@ -55,11 +57,16 @@ class _SingleTextFieldState extends State<SingleTextField> {
             child: MacosTextField(
               controller: _controller,
               style: typography.subheadline,
-              onChanged: widget.onChanged == null
-                  ? null : (value) => widget.onChanged!(value),
+              onChanged: widget.onChanged,
             ),
           ),
-          const Expanded(flex: 1, child: SizedBox.shrink()), // Placeholder for alignment
+          Expanded(
+            flex: 1,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: widget.trailing ?? const SizedBox.shrink(),
+            ),
+          ),
         ],
       ),
     );

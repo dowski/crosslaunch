@@ -234,6 +234,9 @@ final class ValidProject implements Project {
     return supportedPlatforms;
   }
 
+  bool get isVisibleVersionFromPubspec => (appBuildGradle?.isVersionNameFromPubspec ?? false) && (iosInfoPlist?.isVersionNameFromPubspec ?? false);
+  bool get isInternalVersionFromPubspec => (appBuildGradle?.isVersionCodeFromPubspec ?? false) && (iosInfoPlist?.isVersionNumberFromPubspec ?? false);
+
   bool get hasEdits =>
       (androidManifest?.isModified ?? false) ||
       (iosInfoPlist?.isModified ?? false) ||
