@@ -316,7 +316,10 @@ final class ValidProject implements Project {
       iosInfoPlist: iosInfoPlist,
       appBuildGradle: appBuildGradle,
       iosXcodeProject: iosXcodeProject,
-      pubspecYaml: pubspecYaml?.edit(versionName: versionName, versionCode: versionCode),
+      pubspecYaml: pubspecYaml?.edit(
+        versionName: versionName,
+        versionCode: versionCode,
+      ),
       iosIconImage: iosIconImage,
       androidIconImage: androidIconImage,
       replacementIconPath: replacementIconPath,

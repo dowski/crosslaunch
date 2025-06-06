@@ -250,9 +250,27 @@ final class ProjectSettingsWidget extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const _Separator(),
-        SingleTextField(label: 'Visible version', initialValue: ''),
+        SingleTextField(
+          label: 'Visible version',
+          initialValue: project.pubspecYaml?.versionName ?? '',
+          onChanged: (value) => context.read<AvailableProjects>().edit(
+            project,
+            PubspecEdit(
+              versionName: value,
+            ),
+          ),
+        ),
         const SizedBox(height: 8),
-        const SingleTextField(label: 'Internal version', initialValue: ''),
+        SingleTextField(
+          label: 'Internal version',
+          initialValue: project.pubspecYaml?.versionCode ?? '',
+          onChanged: (value) => context.read<AvailableProjects>().edit(
+            project,
+            PubspecEdit(
+              versionCode: value,
+            ),
+          ),
+        ),
       ],
     );
   }
