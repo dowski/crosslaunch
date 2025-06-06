@@ -44,6 +44,12 @@ final class AvailableProjects {
           edit.newIconPath,
         );
         _replaceProject(current: project, updated: updatedProject);
+      case PubspecEdit edit:
+        final updatedProject = project._withNewPubspecValues(
+          versionName: edit.versionName,
+          versionCode: edit.versionCode,
+        );
+        _replaceProject(current: project, updated: updatedProject);
     }
   }
 
@@ -57,6 +63,7 @@ final class AvailableProjects {
       await configStore.saveIosInfoPlist(project.iosInfoPlist!);
       await configStore.saveAppBuildGradle(project.appBuildGradle!);
       await configStore.saveIosXcodeProject(project.iosXcodeProject!);
+      await configStore.savePubspecYaml(project.pubspecYaml!);
       if (project.replacementIconPath != null) {
         // I think this eviction is necessary but not sufficient to force
         // the images visible in the app to reload.
@@ -95,11 +102,13 @@ enum EditTarget {
   bool get includesIos => this == EditTarget.ios || this == EditTarget.both;
 }
 
-sealed class ProjectEdit {
+sealed class ProjectEdit {}
+
+sealed class PlatformSpecificEdit extends ProjectEdit {
   EditTarget get target;
 }
 
-final class AppNameEdit implements ProjectEdit {
+final class AppNameEdit extends PlatformSpecificEdit {
   final String newName;
   @override
   final EditTarget target;
@@ -107,7 +116,7 @@ final class AppNameEdit implements ProjectEdit {
   AppNameEdit.newName(this.newName, {required this.target});
 }
 
-final class ApplicationIdEdit implements ProjectEdit {
+final class ApplicationIdEdit extends PlatformSpecificEdit {
   final String newApplicationId;
   @override
   final EditTarget target;
@@ -118,12 +127,19 @@ final class ApplicationIdEdit implements ProjectEdit {
   });
 }
 
-final class AppIconEdit implements ProjectEdit {
+final class AppIconEdit extends PlatformSpecificEdit {
   final String newIconPath;
   @override
   final EditTarget target = EditTarget.both;
 
   AppIconEdit(this.newIconPath);
+}
+
+final class PubspecEdit extends ProjectEdit {
+  final String? versionName;
+  final String? versionCode;
+
+  PubspecEdit({this.versionName, this.versionCode});
 }
 
 sealed class Project {
@@ -146,6 +162,7 @@ final class ValidProject implements Project {
   final IosInfoPlist? iosInfoPlist;
   final AppBuildGradle? appBuildGradle;
   final IosXcodeProject? iosXcodeProject;
+  final PubspecYaml? pubspecYaml;
   final ImageProvider? iosIconImage;
   final ImageProvider? androidIconImage;
   final String? replacementIconPath;
@@ -162,6 +179,7 @@ final class ValidProject implements Project {
     required this.iosInfoPlist,
     required this.appBuildGradle,
     required this.iosXcodeProject,
+    required this.pubspecYaml,
     required this.iosIconImage,
     required this.androidIconImage,
     required this.replacementIconPath,
@@ -194,6 +212,7 @@ final class ValidProject implements Project {
           supportedPlatforms.contains(SupportedPlatform.ios)
               ? await configStore.loadIosXcodeProject()
               : null,
+      pubspecYaml: await configStore.loadPubspecYaml(),
       iosIconImage: (await iconStore.iosIconImage)?.imageProvider,
       androidIconImage: (await iconStore.androidIconImage)?.imageProvider,
       replacementIconPath: null,
@@ -220,7 +239,8 @@ final class ValidProject implements Project {
       (iosInfoPlist?.isModified ?? false) ||
       (appBuildGradle?.isModified ?? false) ||
       (iosXcodeProject?.isModified ?? false) ||
-      (replacementIconPath != null);
+      (replacementIconPath != null) ||
+      (pubspecYaml?.isModified ?? false);
 
   ValidProject _withNewAppName(
     String newName, {
@@ -239,6 +259,7 @@ final class ValidProject implements Project {
               : iosInfoPlist,
       appBuildGradle: appBuildGradle,
       iosXcodeProject: iosXcodeProject,
+      pubspecYaml: pubspecYaml,
       iosIconImage: iosIconImage,
       androidIconImage: androidIconImage,
       replacementIconPath: replacementIconPath,
@@ -262,6 +283,7 @@ final class ValidProject implements Project {
           editTarget.includesIos
               ? iosXcodeProject?.edit(bundleId: newApplicationId)
               : iosXcodeProject,
+      pubspecYaml: pubspecYaml,
       iosIconImage: iosIconImage,
       androidIconImage: androidIconImage,
       replacementIconPath: replacementIconPath,
@@ -272,6 +294,7 @@ final class ValidProject implements Project {
     return ValidProject(
       directory,
       appBuildGradle: appBuildGradle,
+      pubspecYaml: pubspecYaml,
       iosXcodeProject: iosXcodeProject,
       supportedPlatforms: supportedPlatforms,
       androidManifest: androidManifest,
@@ -279,6 +302,24 @@ final class ValidProject implements Project {
       iosIconImage: iosIconImage,
       androidIconImage: androidIconImage,
       replacementIconPath: newIconPath,
+    );
+  }
+
+  ValidProject _withNewPubspecValues({
+    String? versionName,
+    String? versionCode,
+  }) {
+    return ValidProject(
+      directory,
+      supportedPlatforms: supportedPlatforms,
+      androidManifest: androidManifest,
+      iosInfoPlist: iosInfoPlist,
+      appBuildGradle: appBuildGradle,
+      iosXcodeProject: iosXcodeProject,
+      pubspecYaml: pubspecYaml?.edit(versionName: versionName, versionCode: versionCode),
+      iosIconImage: iosIconImage,
+      androidIconImage: androidIconImage,
+      replacementIconPath: replacementIconPath,
     );
   }
 }
