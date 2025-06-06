@@ -50,6 +50,15 @@ void main() {
           )
           .create(recursive: true);
       xcodeProjectFile.writeAsString(iosXcodeProjectSrc);
+      final pubspecFile = await fileSystem
+          .file(
+            pathlib.join(
+              project.path,
+              ConfigFile.pubspecYaml.projectRelativePath,
+            ),
+          )
+          .create(recursive: true);
+      pubspecFile.writeAsString(pubspecYaml);
 
       weirdProject = await fileSystem.directory('/weird_project').create();
       final weirdManifestFile = await fileSystem
@@ -80,6 +89,15 @@ void main() {
           )
           .create(recursive: true);
       weirdXcodeProjectFile.writeAsString(_xcodeProjectSample);
+      final weirdPubspecFile = await fileSystem
+          .file(
+            pathlib.join(
+              weirdProject.path,
+              ConfigFile.pubspecYaml.projectRelativePath,
+            ),
+          )
+          .create(recursive: true);
+      weirdPubspecFile.writeAsString(_pubspecYamlWithComment);
     });
 
     group(ConfigStore, () {
@@ -276,6 +294,56 @@ void main() {
                 .readAsString();
 
         expect(weirdXcodeProjectXml, _xcodeProjectSampleUpdated);
+      });
+
+      test('loads PubspecYaml successfully', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final pubspec = await configStore.loadPubspecYaml();
+
+        expect(pubspec, isA<PubspecYaml>());
+        expect(pubspec.versionName, '1.0.0');
+        expect(pubspec.versionCode, '1');
+      });
+
+      test('can write and read modified PubspecYaml', () async {
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+
+        final pubspec = await configStore.loadPubspecYaml();
+
+        await configStore.savePubspecYaml(
+          pubspec.edit(versionName: '2.1.3', versionCode: '42'),
+        );
+        final updatedPubspec = await configStore.loadPubspecYaml();
+
+        expect(updatedPubspec.versionName, '2.1.3');
+        expect(updatedPubspec.versionCode, '42');
+      });
+
+      test('writing PubspecYaml only touches correct fields', () async {
+        final configStore = ConfigStore(
+          appDirectory: weirdProject,
+          fileSystem: fileSystem,
+        );
+
+        final pubspec = await configStore.loadPubspecYaml();
+
+        await configStore.savePubspecYaml(
+          pubspec.edit(versionName: '3.0.0', versionCode: '5'),
+        );
+
+        final weirdPubspecContent = await fileSystem
+            .file(pathlib.join(weirdProject.path,
+                ConfigFile.pubspecYaml.projectRelativePath))
+            .readAsString();
+
+        expect(weirdPubspecContent, _pubspecYamlWithCommentUpdated);
       });
     });
   });
@@ -553,6 +621,68 @@ void main() {
       expect(revertedXcodeProject.bundleId, 'com.example.flutterApp');
     });
   });
+
+  group(PubspecYaml, () {
+    test('reads version name and code from YAML', () {
+      final pubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+
+      expect(pubspec.versionName, '1.0.0');
+      expect(pubspec.versionCode, '1');
+    });
+
+    test('reads version name and code from YAML with trailing comment', () {
+      final pubspec = PubspecYaml.fromYaml(yaml: _pubspecYamlWithComment);
+
+      expect(pubspec.versionName, '1.2.3');
+      expect(pubspec.versionCode, '4');
+    });
+
+    test('is not marked as modified after creation', () {
+      final pubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+
+      expect(pubspec.isModified, false);
+    });
+
+    test('can modify the version name and code', () {
+      final originalPubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+      final updatedPubspec =
+          originalPubspec.edit(versionName: '1.1.0', versionCode: '2');
+
+      expect(updatedPubspec.isModified, true);
+      expect(updatedPubspec.versionName, '1.1.0');
+      expect(updatedPubspec.versionCode, '2');
+    });
+
+    test('modification doesn\'t impact the original', () {
+      final originalPubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+      originalPubspec.edit(versionName: '1.1.0');
+
+      expect(originalPubspec.isModified, false);
+      expect(originalPubspec.versionName, '1.0.0');
+    });
+
+    test(
+      'setting the same or null value for version returns equivalent instance',
+      () {
+        final originalPubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+        final noopEdit = originalPubspec.edit();
+        final sameVersionEdit =
+            originalPubspec.edit(versionName: '1.0.0', versionCode: '1');
+
+        expect(originalPubspec, noopEdit);
+        expect(sameVersionEdit, originalPubspec);
+      },
+    );
+
+    test('editing and reverting back to original works', () {
+      final originalPubspec = PubspecYaml.fromYaml(yaml: pubspecYaml);
+      final changedPubspec = originalPubspec.edit(versionName: '1.1.0');
+      final revertedPubspec = changedPubspec.edit(versionName: '1.0.0');
+
+      expect(revertedPubspec.isModified, false);
+      expect(revertedPubspec.versionName, '1.0.0');
+    });
+  });
 }
 
 const _manifestSingleLineApp = '''
@@ -592,4 +722,21 @@ const _xcodeProjectSampleUpdated = r'''
                                 PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp.RunnerTests;
                                 PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp;
                                 PRODUCT_BUNDLE_IDENTIFIER = com.example.fancyApp;
+''';
+
+const _pubspecYamlWithComment = '''
+name: my_app
+description: A new Flutter project.
+version: 1.2.3+4 # This is a comment
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+''';
+const _pubspecYamlWithCommentUpdated = '''
+name: my_app
+description: A new Flutter project.
+version: 3.0.0+5 # This is a comment
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
 ''';

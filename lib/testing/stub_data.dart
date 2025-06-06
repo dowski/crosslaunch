@@ -878,3 +878,13 @@ const iosXcodeProjectSrc = r'''
         rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }
 ''';
+
+const pubspecYaml = '''
+name: flutter_app
+description: A new Flutter project.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+''';

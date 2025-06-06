@@ -297,7 +297,9 @@ class IosXcodeProject {
 }
 
 class PubspecYaml {
-  static final _versionPattern = RegExp(r'version:\s*(\d+\.\d+\.\d+)\+(\d+)');
+  // Captures: (1: "version:\s*") (2: versionName) (3: "+") (4: versionCode) (5: trailing text)
+  static final _versionPattern =
+      RegExp(r'(version:\s*)(\d+\.\d+\.\d+)(\+)(\d+)(.*)');
 
   final String _originalVersionName;
   final String _originalVersionCode;
@@ -322,8 +324,8 @@ class PubspecYaml {
       final match = _versionPattern.firstMatch(line);
       if (match != null) {
         return PubspecYaml._(
-          versionName: match.group(1)!,
-          versionCode: match.group(2)!,
+          versionName: match.group(2)!,
+          versionCode: match.group(4)!,
           yaml: yaml,
         );
       }
@@ -540,6 +542,40 @@ class ConfigStore {
       ),
     );
     await file.writeAsString(modifiedPbxproj);
+  }
+
+  Future<PubspecYaml> loadPubspecYaml() async {
+    final file = _fileSystem.file(
+      pathlib.join(
+        _appDirectory.path,
+        ConfigFile.pubspecYaml.projectRelativePath,
+      ),
+    );
+    final contents = await file.readAsString();
+    return PubspecYaml.fromYaml(yaml: contents);
+  }
+
+  Future<void> savePubspecYaml(PubspecYaml pubspecYaml) async {
+    if (!pubspecYaml.isModified) {
+      return;
+    }
+    final modifiedYaml = pubspecYaml._sourceYaml
+        .split('\n')
+        .map((line) {
+          final match = PubspecYaml._versionPattern.firstMatch(line);
+          if (match != null) {
+            return '${match.group(1)}${pubspecYaml.versionName}${match.group(3)}${pubspecYaml.versionCode}${match.group(5)}';
+          }
+          return line;
+        })
+        .join('\n');
+    final file = _fileSystem.file(
+      pathlib.join(
+        _appDirectory.path,
+        ConfigFile.pubspecYaml.projectRelativePath,
+      ),
+    );
+    await file.writeAsString(modifiedYaml);
   }
 }
 
