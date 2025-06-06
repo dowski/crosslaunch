@@ -4,6 +4,7 @@ import 'package:crosslaunch/linked_text_field.dart';
 import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
+import 'package:crosslaunch/single_text_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -184,9 +185,9 @@ final class ProjectSettingsWidget extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 8),
-        _Separator(),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
+        const _Separator(),
+        const SizedBox(height: 8),
         ...[
           LinkedTextField(
             label: 'App Name',
@@ -237,7 +238,7 @@ final class ProjectSettingsWidget extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 8),
-        _Separator(),
+        const _Separator(),
         const SizedBox(height: 8),
         _AppIconsWidget(
           iosAppIcon: project.iosIconImage,
@@ -247,6 +248,11 @@ final class ProjectSettingsWidget extends StatelessWidget {
             context.read<AvailableProjects>().edit(project, AppIconEdit(path));
           },
         ),
+        const SizedBox(height: 8),
+        const _Separator(),
+        SingleTextField(label: 'Visible version', initialValue: ''),
+        const SizedBox(height: 8),
+        const SingleTextField(label: 'Internal version', initialValue: ''),
       ],
     );
   }
@@ -279,7 +285,7 @@ extension on SupportedPlatform {
 }
 
 class _Separator extends StatelessWidget {
-  const _Separator({super.key});
+  const _Separator();
 
   @override
   Widget build(BuildContext context) {
