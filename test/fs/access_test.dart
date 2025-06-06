@@ -244,6 +244,53 @@ void main() {
         expect(updatedBuildGradle.versionName, '2.0.0');
       });
 
+      test(
+          'writing AppBuildGradle with literal versionName correctly quotes it in the file',
+          () async {
+        // Arrange
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+        final buildGradle = await configStore.loadAppBuildGradle();
+
+        // Act
+        await configStore.saveAppBuildGradle(
+          buildGradle.edit(versionName: '2.5.0'),
+        );
+
+        // Assert
+        final fileContent = await fileSystem
+            .file(pathlib.join(
+                project.path, ConfigFile.appBuildGradle.projectRelativePath))
+            .readAsString();
+        expect(fileContent, contains('versionName = "2.5.0"'));
+      });
+
+      test(
+          'writing AppBuildGradle with reference versionName leaves it unquoted in the file',
+          () async {
+        // Arrange
+        final configStore = ConfigStore(
+          appDirectory: project,
+          fileSystem: fileSystem,
+        );
+        // Start with a non-reference to ensure the change to a reference is tested
+        var initialBuildGradle = await configStore.loadAppBuildGradle();
+        await configStore.saveAppBuildGradle(initialBuildGradle.edit(versionName: "1.0.0")); 
+        final buildGradle = await configStore.loadAppBuildGradle(); // Reload
+
+        // Act
+        await configStore.saveAppBuildGradle(
+          buildGradle.edit(versionName: 'flutter.versionName'),
+        );
+        final fileContent = await fileSystem
+            .file(pathlib.join(
+                project.path, ConfigFile.appBuildGradle.projectRelativePath))
+            .readAsString();
+        expect(fileContent, contains('versionName = flutter.versionName'));
+      });
+
       test('loads IosXcodeProject successfully', () async {
         final configStore = ConfigStore(
           appDirectory: project,

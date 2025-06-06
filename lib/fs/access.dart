@@ -58,37 +58,64 @@ class AndroidManifest {
 }
 
 class AppBuildGradle {
-  static final _appIdPattern = RegExp(r'(applicationId\s*=\s*")([^"]+)(")');
+  // Group 2 is the value *inside* quotes for appId
+  static final _appIdPattern =
+      RegExp(r'(applicationId\s*=\s*")([^"]+)(")');
+  // Group 2 is the raw value (could be "literal" or a.reference)
   static final _versionNamePattern = RegExp(
     r'(\s*versionName\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
   );
+  // Group 2 is the raw value
   static final _versionCodePattern = RegExp(
     r'(\s*versionCode\s*=\s*)([^,\n\r/]+)(\s*(?:[,/\n\r].*)??)',
   );
 
-  final String _originalAppId;
-  final String? _newAppId;
-  final String _originalVersionName;
-  final String? _newVersionName;
-  final String _originalVersionCode;
-  final String? _newVersionCode;
+  static final _likelyVariableReferencePattern =
+      RegExp(r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$');
+
+  // Store RAW values as they appear/should appear in the file
+  final String _originalRawAppId;
+  final String? _newRawAppId;
+  final String _originalRawVersionName;
+  final String? _newRawVersionName;
+  final String _originalRawVersionCode;
+  final String? _newRawVersionCode;
   final String _sourceKts;
 
+  static String _semanticToRawVersionName(String semanticVersionName) {
+    if (_likelyVariableReferencePattern.hasMatch(semanticVersionName)) {
+      return semanticVersionName; // It's a reference
+    }
+    return '"$semanticVersionName"'; // It's a literal, quote it
+  }
+
+  static String _rawToSemanticVersionName(String rawVersionName) {
+    if (rawVersionName.length >= 2 &&
+        rawVersionName.startsWith('"') &&
+        rawVersionName.endsWith('"')) {
+      // Only unquote if the content isn't itself a variable reference,
+      // though _semanticToRawVersionName should prevent "var.name" from being stored.
+      // This primarily handles unquoting of literals like "1.0.0".
+      return rawVersionName.substring(1, rawVersionName.length - 1);
+    }
+    return rawVersionName;
+  }
+
   AppBuildGradle._({
-    required String appId,
-    required String versionName,
-    required String versionCode,
+    required String rawAppId,
+    required String rawVersionName,
+    required String rawVersionCode,
     required String kts,
-    String? newAppId,
-    String? newVersionName,
-    String? newVersionCode,
+    String? newRawAppId,
+    String? newRawVersionName,
+    String? newRawVersionCode,
   }) : _sourceKts = kts,
-       _originalAppId = appId,
-       _newAppId = newAppId,
-       _originalVersionName = versionName,
-       _newVersionName = newVersionName,
-       _originalVersionCode = versionCode,
-       _newVersionCode = newVersionCode;
+       _originalRawAppId = rawAppId,
+       _newRawAppId = newRawAppId,
+       _originalRawVersionName = rawVersionName,
+       _newRawVersionName = newRawVersionName,
+       _originalRawVersionCode = rawVersionCode,
+       _newRawVersionCode = newRawVersionCode;
   factory AppBuildGradle.fromKts({required String kts}) {
     final appId = SingleLineMatch(_appIdPattern);
     final versionName = SingleLineMatch(_versionNamePattern);
@@ -105,39 +132,63 @@ class AppBuildGradle {
       }
     }
     return AppBuildGradle._(
-      appId: appId.value!,
-      versionName: versionName.value!,
-      versionCode: versionCode.value!,
+      rawAppId: appId.value!, // Value from file (inside quotes)
+      rawVersionName: versionName.value!, // Raw value from file
+      rawVersionCode: versionCode.value!, // Raw value from file
       kts: kts,
     );
   }
 
-  String get applicationId => _newAppId ?? _originalAppId;
-  String get versionName => _newVersionName ?? _originalVersionName;
-  String get versionCode => _newVersionCode ?? _originalVersionCode;
-  bool get isModified =>
-      (_newAppId != null && _newAppId != _originalAppId) ||
-      (_newVersionName != null && _newVersionName != _originalVersionName) ||
-      (_newVersionCode != null && _newVersionCode != _originalVersionCode);
+  // Getters return SEMANTIC values
+  String get applicationId => _newRawAppId ?? _originalRawAppId;
+  String get versionName =>
+      _rawToSemanticVersionName(_newRawVersionName ?? _originalRawVersionName);
+  String get versionCode => _newRawVersionCode ?? _originalRawVersionCode;
+
+  // Internal getters for RAW values, used by ConfigStore for saving
+  String get _rawAppIdToWrite => _newRawAppId ?? _originalRawAppId;
+  String get _rawVersionNameToWrite =>
+      _newRawVersionName ?? _originalRawVersionName;
+  String get _rawVersionCodeToWrite =>
+      _newRawVersionCode ?? _originalRawVersionCode;
+
+  bool get isModified {
+    final appIdModified =
+        _newRawAppId != null && _newRawAppId != _originalRawAppId;
+    final versionNameModified = _newRawVersionName != null &&
+        _newRawVersionName != _originalRawVersionName;
+    final versionCodeModified = _newRawVersionCode != null &&
+        _newRawVersionCode != _originalRawVersionCode;
+    return appIdModified || versionNameModified || versionCodeModified;
+  }
 
   AppBuildGradle edit({
-    String? appId,
-    String? versionName,
-    String? versionCode,
+    String? appId, // Semantic value
+    String? versionName, // Semantic value
+    String? versionCode, // Semantic value
   }) {
-    if ((appId == null || appId == applicationId) &&
-        (versionName == null || versionName == this.versionName) &&
-        (versionCode == null || versionCode == this.versionCode)) {
+    // Compare input semantic values with current semantic values from getters
+    final noAppIdChange = (appId == null || appId == this.applicationId);
+    final noVersionNameChange =
+        (versionName == null || versionName == this.versionName);
+    final noVersionCodeChange =
+        (versionCode == null || versionCode == this.versionCode);
+
+    if (noAppIdChange && noVersionNameChange && noVersionCodeChange) {
       return this;
     }
+
     return AppBuildGradle._(
-      appId: _originalAppId,
-      versionName: _originalVersionName,
-      versionCode: _originalVersionCode,
+      rawAppId: _originalRawAppId,
+      rawVersionName: _originalRawVersionName,
+      rawVersionCode: _originalRawVersionCode,
       kts: _sourceKts,
-      newAppId: appId,
-      newVersionName: versionName,
-      newVersionCode: versionCode,
+      newRawAppId: appId != null ? appId : _newRawAppId,
+      newRawVersionName: versionName != null
+          ? _semanticToRawVersionName(versionName)
+          : _newRawVersionName,
+      newRawVersionCode:
+          versionCode != null ? versionCode : _newRawVersionCode,
     );
   }
 }
@@ -474,14 +525,17 @@ class ConfigStore {
     }
 
     final updates = [
-      SingleLineUpdate(AppBuildGradle._appIdPattern, buildGradle.applicationId),
+      SingleLineUpdate(
+        AppBuildGradle._appIdPattern,
+        buildGradle._rawAppIdToWrite,
+      ),
       SingleLineUpdate(
         AppBuildGradle._versionNamePattern,
-        buildGradle.versionName,
+        buildGradle._rawVersionNameToWrite, // Use the raw value for saving
       ),
       SingleLineUpdate(
         AppBuildGradle._versionCodePattern,
-        buildGradle.versionCode,
+        buildGradle._rawVersionCodeToWrite, // Use the raw value for saving
       ),
     ];
     final modifiedKts = buildGradle._sourceKts
