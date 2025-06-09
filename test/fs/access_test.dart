@@ -220,6 +220,8 @@ void main() {
         final buildGradle = await configStore.loadAppBuildGradle();
 
         expect(buildGradle, isA<AppBuildGradle>());
+        expect(buildGradle.isVersionCodeFromPubspec, true);
+        expect(buildGradle.isVersionNameFromPubspec, true);
       });
 
       test('can write and read modified AppBuildGradle', () async {
@@ -242,6 +244,8 @@ void main() {
         expect(updatedBuildGradle.applicationId, 'com.example.fancy_app');
         expect(updatedBuildGradle.versionCode, '4');
         expect(updatedBuildGradle.versionName, '2.0.0');
+        expect(updatedBuildGradle.isVersionCodeFromPubspec, false);
+        expect(updatedBuildGradle.isVersionNameFromPubspec, false);
       });
 
       test(
@@ -595,37 +599,6 @@ void main() {
       // Act & Assert
       expect(appBuildGradle.isVersionNameFromPubspec, isTrue);
       expect(appBuildGradle.isVersionCodeFromPubspec, isTrue);
-    });
-
-    test(
-        'isVersionNameFromPubspec and isVersionCodeFromPubspec are false when edited to literals',
-        () {
-      // Arrange
-      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle);
-
-      // Act
-      final modified =
-          appBuildGradle.edit(versionName: '1.2.3', versionCode: '4');
-
-      // Assert
-      expect(modified.isVersionNameFromPubspec, isFalse);
-      expect(modified.isVersionCodeFromPubspec, isFalse);
-    });
-
-    test(
-        'isVersionNameFromPubspec and isVersionCodeFromPubspec revert to true when edited back to pubspec references',
-        () {
-      // Arrange
-      final appBuildGradle = AppBuildGradle.fromKts(kts: androidAppBuildGradle)
-          .edit(versionName: '1.2.3', versionCode: '4'); // Start with non-pubspec values
-
-      // Act
-      final reverted = appBuildGradle.edit(
-          versionName: 'flutter.versionName', versionCode: 'flutter.versionCode');
-
-      // Assert
-      expect(reverted.isVersionNameFromPubspec, isTrue);
-      expect(reverted.isVersionCodeFromPubspec, isTrue);
     });
 
     test('is not marked as modified after creation', () {

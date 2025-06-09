@@ -164,9 +164,9 @@ class AppBuildGradle {
     return appIdModified || versionNameModified || versionCodeModified;
   }
 
-  bool get isVersionNameFromPubspec => versionName == 'flutter.versionName';
+  bool get isVersionNameFromPubspec => _originalRawVersionName == 'flutter.versionName';
 
-  bool get isVersionCodeFromPubspec => versionCode == 'flutter.versionCode';
+  bool get isVersionCodeFromPubspec => _originalRawVersionCode == 'flutter.versionCode';
 
   AppBuildGradle edit({
     String? appId, // Semantic value
@@ -189,12 +189,12 @@ class AppBuildGradle {
       rawVersionName: _originalRawVersionName,
       rawVersionCode: _originalRawVersionCode,
       kts: _sourceKts,
-      newRawAppId: appId != null ? appId : _newRawAppId,
+      newRawAppId: appId ?? _newRawAppId,
       newRawVersionName:
           versionName != null
               ? _semanticToRawVersionName(versionName)
               : _newRawVersionName,
-      newRawVersionCode: versionCode != null ? versionCode : _newRawVersionCode,
+      newRawVersionCode: versionCode ?? _newRawVersionCode,
     );
   }
 }
