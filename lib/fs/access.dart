@@ -307,10 +307,10 @@ class IosInfoPlist {
       (_newVersionNumber != null &&
           _newVersionNumber != _originalVersionNumber);
 
-  bool get isVersionNameFromPubspec => versionName == r'$(FLUTTER_BUILD_NAME)';
+  bool get isVersionNameFromPubspec => _originalVersionString == r'$(FLUTTER_BUILD_NAME)';
 
   bool get isVersionNumberFromPubspec =>
-      versionNumber == r'$(FLUTTER_BUILD_NUMBER)';
+      _originalVersionNumber == r'$(FLUTTER_BUILD_NUMBER)';
 
   String get displayName => _newDisplayName ?? _originalDisplayName;
   String get versionName => _newVersionString ?? _originalVersionString;

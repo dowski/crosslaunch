@@ -162,6 +162,8 @@ void main() {
         final infoPlist = await configStore.loadIosInfoPlist();
 
         expect(infoPlist, isA<IosInfoPlist>());
+        expect(infoPlist.isVersionNameFromPubspec, true);
+        expect(infoPlist.isVersionNumberFromPubspec, true);
       });
 
       test('can write and read modified iOS Info.plist', () async {
@@ -184,6 +186,8 @@ void main() {
         expect(updatedInfoPlist.displayName, 'fancy_app');
         expect(updatedInfoPlist.versionName, '2.0.0');
         expect(updatedInfoPlist.versionNumber, '1');
+        expect(updatedInfoPlist.isVersionNameFromPubspec, false);
+        expect(updatedInfoPlist.isVersionNumberFromPubspec, false);
       });
 
       test('writing Info.plist only touches correct fields', () async {
@@ -474,43 +478,6 @@ void main() {
       // Act & Assert
       expect(infoPlist.isVersionNameFromPubspec, isTrue);
       expect(infoPlist.isVersionNumberFromPubspec, isTrue);
-    });
-
-    test(
-        'isVersionNameFromPubspec and isVersionNumberFromPubspec are false when edited to literals',
-        () {
-      // Arrange
-      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist);
-
-      // Act
-      final modified = infoPlist.edit(versionName: '1.2.3', versionNumber: '4');
-
-      // Assert
-      expect(modified.isVersionNameFromPubspec, isFalse);
-      expect(modified.isVersionNumberFromPubspec, isFalse);
-    });
-
-    test(
-        'isVersionNameFromPubspec and isVersionNumberFromPubspec revert to true when edited back to pubspec references',
-        () {
-      // Arrange
-      final infoPlist = IosInfoPlist.fromXml(xml: iosInfoPlist)
-          .edit(versionName: '1.2.3', versionNumber: '4'); // Start with non-pubspec values
-
-      // Act
-      final backToPubspecName =
-          infoPlist.edit(versionName: r'$(FLUTTER_BUILD_NAME)');
-      final backToPubspecNumber =
-          infoPlist.edit(versionNumber: r'$(FLUTTER_BUILD_NUMBER)');
-      final bothReverted = infoPlist.edit(
-          versionName: r'$(FLUTTER_BUILD_NAME)',
-          versionNumber: r'$(FLUTTER_BUILD_NUMBER)');
-
-      // Assert
-      expect(backToPubspecName.isVersionNameFromPubspec, isTrue);
-      expect(backToPubspecNumber.isVersionNumberFromPubspec, isTrue);
-      expect(bothReverted.isVersionNameFromPubspec, isTrue);
-      expect(bothReverted.isVersionNumberFromPubspec, isTrue);
     });
 
     test('is not marked as modified after creation', () {
