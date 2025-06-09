@@ -108,8 +108,8 @@ class _LinkedTextFieldState<T extends DataDescriptor>
                     MutedMacosIconButton(
                       icon:
                           isExpanded
-                              ? CupertinoIcons.chevron_down
-                              : CupertinoIcons.chevron_up,
+                              ? CupertinoIcons.chevron_up
+                              : CupertinoIcons.chevron_down,
                       onPressed: () => setState(() => isExpanded = !isExpanded),
                     ),
                     HelpButton(onPressed: () {}),
