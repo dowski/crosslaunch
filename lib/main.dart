@@ -5,6 +5,7 @@ import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
 import 'package:crosslaunch/single_text_field.dart';
+import 'package:crosslaunch/tri_source_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -250,28 +251,51 @@ final class ProjectSettingsWidget extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const _Separator(),
-        SingleTextField(
-          label: 'Visible version',
-          initialValue: project.pubspecYaml?.versionName ?? '',
-          onChanged:
+        TriSourceTextField(
+          isExpanded: !project.isVisibleVersionFromPubspec,
+          mainFieldLabel: 'Visible version',
+          androidLabel: 'versionName',
+          iosLabel: 'CFBundleShortVersionString',
+          mainFieldValue: project.pubspecYaml?.versionName,
+          androidValue: project.appBuildGradle?.versionName,
+          iosValue: project.iosInfoPlist?.versionName,
+          onMainFieldChanged:
               (value) => context.read<AvailableProjects>().edit(
                 project,
                 PubspecEdit(versionName: value),
               ),
-          trailing:
-              project.isVisibleVersionFromPubspec ? null : const _WarningWidget(),
-        ),
-        const SizedBox(height: 8),
-        SingleTextField(
-          label: 'Internal version',
-          initialValue: project.pubspecYaml?.versionCode ?? '',
-          onChanged:
+          onAndroidChanged:
               (value) => context.read<AvailableProjects>().edit(
                 project,
-                PubspecEdit(versionCode: value),
+                AppBuildGradleEdit(versionName: value),
               ),
-          trailing:
-              project.isInternalVersionFromPubspec ? null : const _WarningWidget(),
+          onIosChanged:
+              (value) => context.read<AvailableProjects>().edit(
+                project,
+                IosInfoPlistEdit(versionName: value),
+              ),
+        ),
+        const SizedBox(height: 8),
+        TriSourceTextField(
+          isExpanded: !project.isInternalVersionFromPubspec,
+          mainFieldLabel: 'Internal version',
+          androidLabel: 'versionCode',
+          iosLabel: 'CFBundleVersion',
+          mainFieldValue: project.pubspecYaml?.versionCode,
+          androidValue: project.appBuildGradle?.versionCode,
+          iosValue: project.iosInfoPlist?.versionNumber,
+          onMainFieldChanged: (value) => context.read<AvailableProjects>().edit(
+            project,
+            PubspecEdit(versionCode: value),
+          ),
+          onAndroidChanged: (value) => context.read<AvailableProjects>().edit(
+            project,
+            AppBuildGradleEdit(versionCode: value),
+          ),
+          onIosChanged: (value) => context.read<AvailableProjects>().edit(
+            project,
+            IosInfoPlistEdit(versionNumber: value),
+          ),
         ),
       ],
     );
@@ -459,18 +483,6 @@ class _AppIconsWidget extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _WarningWidget extends StatelessWidget {
-  const _WarningWidget();
-
-  @override
-  Widget build(BuildContext context) {
-    return MacosIcon(
-      CupertinoIcons.exclamationmark_circle,
-      color: MacosColors.systemYellowColor.darkColor,
     );
   }
 }

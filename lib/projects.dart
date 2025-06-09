@@ -50,6 +50,18 @@ final class AvailableProjects {
           versionCode: edit.versionCode ?? project.pubspecYaml?.versionCode,
         );
         _replaceProject(current: project, updated: updatedProject);
+      case AppBuildGradleEdit edit:
+        final updatedProject = project._withNewAndroidVersionValues(
+          versionName: edit.versionName,
+          versionCode: edit.versionCode,
+        );
+        _replaceProject(current: project, updated: updatedProject);
+      case IosInfoPlistEdit edit:
+        final updatedProject = project._withNewIosVersionValues(
+          versionName: edit.versionName,
+          versionNumber: edit.versionNumber,
+        );
+        _replaceProject(current: project, updated: updatedProject);
     }
   }
 
@@ -140,6 +152,20 @@ final class PubspecEdit extends ProjectEdit {
   final String? versionCode;
 
   PubspecEdit({this.versionName, this.versionCode});
+}
+
+final class AppBuildGradleEdit extends ProjectEdit {
+  final String? versionName;
+  final String? versionCode;
+
+  AppBuildGradleEdit({this.versionName, this.versionCode});
+}
+
+final class IosInfoPlistEdit extends ProjectEdit {
+  final String? versionName;
+  final String? versionNumber;
+
+  IosInfoPlistEdit({this.versionName, this.versionNumber});
 }
 
 sealed class Project {
@@ -234,8 +260,12 @@ final class ValidProject implements Project {
     return supportedPlatforms;
   }
 
-  bool get isVisibleVersionFromPubspec => (appBuildGradle?.isVersionNameFromPubspec ?? false) && (iosInfoPlist?.isVersionNameFromPubspec ?? false);
-  bool get isInternalVersionFromPubspec => (appBuildGradle?.isVersionCodeFromPubspec ?? false) && (iosInfoPlist?.isVersionNumberFromPubspec ?? false);
+  bool get isVisibleVersionFromPubspec =>
+      (appBuildGradle?.isVersionNameFromPubspec ?? false) &&
+      (iosInfoPlist?.isVersionNameFromPubspec ?? false);
+  bool get isInternalVersionFromPubspec =>
+      (appBuildGradle?.isVersionCodeFromPubspec ?? false) &&
+      (iosInfoPlist?.isVersionNumberFromPubspec ?? false);
 
   bool get hasEdits =>
       (androidManifest?.isModified ?? false) ||
@@ -325,6 +355,48 @@ final class ValidProject implements Project {
       ),
       iosIconImage: iosIconImage,
       androidIconImage: androidIconImage,
+      replacementIconPath: replacementIconPath,
+    );
+  }
+
+  ValidProject _withNewAndroidVersionValues({
+    String? versionName,
+    String? versionCode,
+  }) {
+    return ValidProject(
+      directory,
+      supportedPlatforms: supportedPlatforms,
+      androidManifest: androidManifest,
+      iosInfoPlist: iosInfoPlist,
+      appBuildGradle: appBuildGradle?.edit(
+        versionName: versionName,
+        versionCode: versionCode,
+      ),
+      iosXcodeProject: iosXcodeProject,
+      androidIconImage: androidIconImage,
+      iosIconImage: iosIconImage,
+      pubspecYaml: pubspecYaml,
+      replacementIconPath: replacementIconPath,
+    );
+  }
+
+  ValidProject _withNewIosVersionValues({
+    String? versionName,
+    String? versionNumber,
+  }) {
+    return ValidProject(
+      directory,
+      supportedPlatforms: supportedPlatforms,
+      androidManifest: androidManifest,
+      iosInfoPlist: iosInfoPlist?.edit(
+        versionName: versionName,
+        versionNumber: versionNumber,
+      ),
+      appBuildGradle: appBuildGradle,
+      iosXcodeProject: iosXcodeProject,
+      androidIconImage: androidIconImage,
+      iosIconImage: iosIconImage,
+      pubspecYaml: pubspecYaml,
       replacementIconPath: replacementIconPath,
     );
   }
