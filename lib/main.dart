@@ -167,136 +167,138 @@ final class ProjectSettingsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final typography = MacosTypography.of(context);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            SizedBox(width: 16),
-            Text('Project Settings', style: typography.title3),
-            Spacer(),
-            PushButton(
-              controlSize: ControlSize.regular,
-              onPressed:
-                  project.hasEdits
-                      ? () => context.read<AvailableProjects>().save(project)
-                      : null,
-              child: Text('Apply'),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 16),
+              Text('Project Settings', style: typography.title3),
+              Spacer(),
+              PushButton(
+                controlSize: ControlSize.regular,
+                onPressed:
+                    project.hasEdits
+                        ? () => context.read<AvailableProjects>().save(project)
+                        : null,
+                child: Text('Apply'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const _Separator(),
+          const SizedBox(height: 8),
+          ...[
+            LinkedTextField(
+              label: 'App Name',
+              dataDescriptor1: PlatformDataDescriptor.android(
+                'android:label',
+                value: project.androidManifest?.androidLabel ?? '',
+              ),
+              dataDescriptor2: PlatformDataDescriptor.ios(
+                'Display Name',
+                value: project.iosInfoPlist?.displayName ?? '',
+              ),
+              onChanged: (value, isCollapsed, descriptor) {
+                context.read<AvailableProjects>().edit(
+                  project,
+                  AppNameEdit.newName(
+                    value,
+                    target:
+                        isCollapsed
+                            ? EditTarget.both
+                            : descriptor.platform.editTarget,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            LinkedTextField(
+              label: 'App ID',
+              dataDescriptor1: PlatformDataDescriptor.android(
+                'applicationId',
+                value: project.appBuildGradle?.applicationId ?? '',
+              ),
+              dataDescriptor2: PlatformDataDescriptor.ios(
+                'Bundle ID',
+                value: project.iosXcodeProject?.bundleId ?? '',
+              ),
+              onChanged: (value, isCollapsed, descriptor) {
+                context.read<AvailableProjects>().edit(
+                  project,
+                  ApplicationIdEdit.newApplicationId(
+                    value,
+                    target:
+                        isCollapsed
+                            ? EditTarget.both
+                            : descriptor.platform.editTarget,
+                  ),
+                );
+              },
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        const _Separator(),
-        const SizedBox(height: 8),
-        ...[
-          LinkedTextField(
-            label: 'App Name',
-            dataDescriptor1: PlatformDataDescriptor.android(
-              'android:label',
-              value: project.androidManifest?.androidLabel ?? '',
-            ),
-            dataDescriptor2: PlatformDataDescriptor.ios(
-              'Display Name',
-              value: project.iosInfoPlist?.displayName ?? '',
-            ),
-            onChanged: (value, isCollapsed, descriptor) {
-              context.read<AvailableProjects>().edit(
-                project,
-                AppNameEdit.newName(
-                  value,
-                  target:
-                      isCollapsed
-                          ? EditTarget.both
-                          : descriptor.platform.editTarget,
-                ),
-              );
+          const SizedBox(height: 8),
+          const _Separator(),
+          const SizedBox(height: 8),
+          _AppIconsWidget(
+            iosAppIcon: project.iosIconImage,
+            androidAppIcon: project.androidIconImage,
+            previewReplacementIcon: project.replacementPreviewImage,
+            onReplacementImagePath: (path) {
+              context.read<AvailableProjects>().edit(project, AppIconEdit(path));
             },
           ),
-          const SizedBox(height: 16),
-          LinkedTextField(
-            label: 'App ID',
-            dataDescriptor1: PlatformDataDescriptor.android(
-              'applicationId',
-              value: project.appBuildGradle?.applicationId ?? '',
-            ),
-            dataDescriptor2: PlatformDataDescriptor.ios(
-              'Bundle ID',
-              value: project.iosXcodeProject?.bundleId ?? '',
-            ),
-            onChanged: (value, isCollapsed, descriptor) {
-              context.read<AvailableProjects>().edit(
-                project,
-                ApplicationIdEdit.newApplicationId(
-                  value,
-                  target:
-                      isCollapsed
-                          ? EditTarget.both
-                          : descriptor.platform.editTarget,
+          const SizedBox(height: 8),
+          const _Separator(),
+          TriSourceTextField(
+            isExpanded: !project.isVisibleVersionFromPubspec,
+            mainFieldLabel: 'Visible version',
+            androidLabel: 'versionName',
+            iosLabel: 'CFBundleShortVersionString',
+            mainFieldValue: project.pubspecYaml?.versionName,
+            androidValue: project.appBuildGradle?.versionName,
+            iosValue: project.iosInfoPlist?.versionName,
+            onMainFieldChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  PubspecEdit(versionName: value),
                 ),
-              );
-            },
+            onAndroidChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  AppBuildGradleEdit(versionName: value),
+                ),
+            onIosChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  IosInfoPlistEdit(versionName: value),
+                ),
+          ),
+          const SizedBox(height: 8),
+          TriSourceTextField(
+            isExpanded: !project.isInternalVersionFromPubspec,
+            mainFieldLabel: 'Internal version',
+            androidLabel: 'versionCode',
+            iosLabel: 'CFBundleVersion',
+            mainFieldValue: project.pubspecYaml?.versionCode,
+            androidValue: project.appBuildGradle?.versionCode,
+            iosValue: project.iosInfoPlist?.versionNumber,
+            onMainFieldChanged: (value) => context.read<AvailableProjects>().edit(
+              project,
+              PubspecEdit(versionCode: value),
+            ),
+            onAndroidChanged: (value) => context.read<AvailableProjects>().edit(
+              project,
+              AppBuildGradleEdit(versionCode: value),
+            ),
+            onIosChanged: (value) => context.read<AvailableProjects>().edit(
+              project,
+              IosInfoPlistEdit(versionNumber: value),
+            ),
           ),
         ],
-        const SizedBox(height: 8),
-        const _Separator(),
-        const SizedBox(height: 8),
-        _AppIconsWidget(
-          iosAppIcon: project.iosIconImage,
-          androidAppIcon: project.androidIconImage,
-          previewReplacementIcon: project.replacementPreviewImage,
-          onReplacementImagePath: (path) {
-            context.read<AvailableProjects>().edit(project, AppIconEdit(path));
-          },
-        ),
-        const SizedBox(height: 8),
-        const _Separator(),
-        TriSourceTextField(
-          isExpanded: !project.isVisibleVersionFromPubspec,
-          mainFieldLabel: 'Visible version',
-          androidLabel: 'versionName',
-          iosLabel: 'CFBundleShortVersionString',
-          mainFieldValue: project.pubspecYaml?.versionName,
-          androidValue: project.appBuildGradle?.versionName,
-          iosValue: project.iosInfoPlist?.versionName,
-          onMainFieldChanged:
-              (value) => context.read<AvailableProjects>().edit(
-                project,
-                PubspecEdit(versionName: value),
-              ),
-          onAndroidChanged:
-              (value) => context.read<AvailableProjects>().edit(
-                project,
-                AppBuildGradleEdit(versionName: value),
-              ),
-          onIosChanged:
-              (value) => context.read<AvailableProjects>().edit(
-                project,
-                IosInfoPlistEdit(versionName: value),
-              ),
-        ),
-        const SizedBox(height: 8),
-        TriSourceTextField(
-          isExpanded: !project.isInternalVersionFromPubspec,
-          mainFieldLabel: 'Internal version',
-          androidLabel: 'versionCode',
-          iosLabel: 'CFBundleVersion',
-          mainFieldValue: project.pubspecYaml?.versionCode,
-          androidValue: project.appBuildGradle?.versionCode,
-          iosValue: project.iosInfoPlist?.versionNumber,
-          onMainFieldChanged: (value) => context.read<AvailableProjects>().edit(
-            project,
-            PubspecEdit(versionCode: value),
-          ),
-          onAndroidChanged: (value) => context.read<AvailableProjects>().edit(
-            project,
-            AppBuildGradleEdit(versionCode: value),
-          ),
-          onIosChanged: (value) => context.read<AvailableProjects>().edit(
-            project,
-            IosInfoPlistEdit(versionNumber: value),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
