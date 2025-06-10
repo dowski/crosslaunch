@@ -2,18 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
 final class SingleTextField extends StatefulWidget {
-  final String label;
   final String initialValue;
   final ValueChanged<String>? onChanged;
   final Widget? leading;
-  final Widget? trailing;
 
   const SingleTextField({
     super.key,
-    required this.label,
     required this.initialValue,
     this.leading,
-    this.trailing,
     this.onChanged,
   });
 
@@ -41,37 +37,11 @@ class _SingleTextFieldState extends State<SingleTextField> {
   @override
   Widget build(BuildContext context) {
     final typography = MacosTypography.of(context);
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [Text(widget.label, style: typography.subheadline)],
-            ),
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            flex: 4,
-            child: MacosTextField(
-              controller: _controller,
-              prefix: widget.leading,
-              style: typography.subheadline,
-              onChanged: widget.onChanged,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: widget.trailing ?? const SizedBox.shrink(),
-            ),
-          ),
-        ],
-      ),
+    return MacosTextField(
+      controller: _controller,
+      prefix: widget.leading,
+      style: typography.subheadline,
+      onChanged: widget.onChanged,
     );
   }
 

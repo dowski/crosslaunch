@@ -98,23 +98,18 @@ class _LinkedTextFieldState<T extends DataDescriptor>
               ],
             ),
           ),
-          Expanded(
+          Flexible(
             flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    MutedMacosIconButton(
-                      icon:
-                          isExpanded
-                              ? CupertinoIcons.chevron_up
-                              : CupertinoIcons.chevron_down,
-                      onPressed: () => setState(() => isExpanded = !isExpanded),
-                    ),
-                    HelpButton(onPressed: () {}),
-                  ],
+                MutedMacosIconButton(
+                  icon:
+                      isExpanded
+                          ? CupertinoIcons.chevron_up
+                          : CupertinoIcons.chevron_down,
+                  onPressed: () => setState(() => isExpanded = !isExpanded),
                 ),
+                HelpButton(onPressed: () {}),
               ],
             ),
           ),
