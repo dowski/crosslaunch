@@ -246,7 +246,10 @@ final class ProjectSettingsWidget extends StatelessWidget {
             androidAppIcon: project.androidIconImage,
             previewReplacementIcon: project.replacementPreviewImage,
             onReplacementImagePath: (path) {
-              context.read<AvailableProjects>().edit(project, AppIconEdit(path));
+              context.read<AvailableProjects>().edit(
+                project,
+                AppIconEdit(path),
+              );
             },
           ),
           const SizedBox(height: 8),
@@ -284,18 +287,21 @@ final class ProjectSettingsWidget extends StatelessWidget {
             mainFieldValue: project.pubspecYaml?.versionCode,
             androidValue: project.appBuildGradle?.versionCode,
             iosValue: project.iosInfoPlist?.versionNumber,
-            onMainFieldChanged: (value) => context.read<AvailableProjects>().edit(
-              project,
-              PubspecEdit(versionCode: value),
-            ),
-            onAndroidChanged: (value) => context.read<AvailableProjects>().edit(
-              project,
-              AppBuildGradleEdit(versionCode: value),
-            ),
-            onIosChanged: (value) => context.read<AvailableProjects>().edit(
-              project,
-              IosInfoPlistEdit(versionNumber: value),
-            ),
+            onMainFieldChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  PubspecEdit(versionCode: value),
+                ),
+            onAndroidChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  AppBuildGradleEdit(versionCode: value),
+                ),
+            onIosChanged:
+                (value) => context.read<AvailableProjects>().edit(
+                  project,
+                  IosInfoPlistEdit(versionNumber: value),
+                ),
           ),
         ],
       ),
@@ -359,15 +365,15 @@ class _AppIconsWidget extends StatelessWidget {
         children: [
           Expanded(
             flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [Text('Icons', style: typography.subheadline)],
+            child: Text(
+              'Icons',
+              textAlign: TextAlign.end,
+              style: typography.subheadline,
             ),
           ),
           SizedBox(width: 8),
           Expanded(
-            flex: 1,
+            flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 8,
@@ -439,14 +445,33 @@ class _AppIconsWidget extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
+          Flexible(
             flex: 3,
             child: Row(
               children: [
+                SizedBox(width: 8),
+                Text('Preview', style: typography.subheadline),
+                SizedBox(width: 8),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      height: 64,
+                      width: 64,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MacosColors.secondaryLabelColor.darkColor,
+                          width: 1,
+                          style: BorderStyle.solid,
+                        ),
+                      ),
+                      child:
+                          previewReplacementIcon != null
+                              ? Image(image: previewReplacementIcon!)
+                              : null,
+                    ),
+                    const SizedBox(height: 8),
                     PushButton(
                       controlSize: ControlSize.regular,
                       onPressed: () async {
@@ -460,24 +485,6 @@ class _AppIconsWidget extends StatelessWidget {
                       child: const Text('Choose'),
                     ),
                   ],
-                ),
-                SizedBox(width: 8),
-                Text('Preview', style: typography.subheadline),
-                SizedBox(width: 8),
-                Container(
-                  height: 64,
-                  width: 64,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: MacosColors.secondaryLabelColor.darkColor,
-                      width: 1,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                  child:
-                      previewReplacementIcon != null
-                          ? Image(image: previewReplacementIcon!)
-                          : null,
                 ),
               ],
             ),
