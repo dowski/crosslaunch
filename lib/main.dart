@@ -4,7 +4,6 @@ import 'package:crosslaunch/linked_text_field.dart';
 import 'package:crosslaunch/platform.dart';
 import 'package:crosslaunch/platform_label.dart';
 import 'package:crosslaunch/projects.dart';
-import 'package:crosslaunch/single_text_field.dart';
 import 'package:crosslaunch/tri_source_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
