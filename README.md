@@ -35,6 +35,7 @@ That DMG file can be distributed as you see fit.
 ## Terms
 
 Cross Launch - Simplify Flutter Releases
+
 Copyright (C) 2025 Christian Wyglendowski
 
 This program is free software: you can redistribute it and/or modify
