@@ -10,7 +10,7 @@ mkdir -p "$DMG_CONTENTS"
 
 # Copy app and licenses
 cp -R "$RELEASE_DIR/Cross Launch.app" "$DMG_CONTENTS/"
-cp "$PROJECT_ROOT/LICENSES.txt" "$DMG_CONTENTS/"
+cp "$PROJECT_ROOT/LICENSE.txt" "$DMG_CONTENTS/"
 
 # Create DMG in the release directory
 cd "$RELEASE_DIR"
