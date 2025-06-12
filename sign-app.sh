@@ -1,8 +1,16 @@
 #!/bin/bash
 
+# Source the private config file, exit if it doesn't exist
+if [[ -f "./config.sh" ]]; then
+    source ./config.sh
+else
+    echo "Error: config.sh not found. Please create it with your developer credentials."
+    echo "Example: echo 'SIGNING_IDENTITY=\"Developer ID Application: Your Name (TEAMID)\"' > config.sh"
+    exit 1
+fi
+
 # Configuration
 APP_NAME="Cross Launch.app"
-SIGNING_IDENTITY="Developer ID Application: Christian Wyglendowski (TEAM_ID_PLACEHOLDER)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 RELEASE_DIR="$PROJECT_ROOT/build/macos/Build/Products/Release"
