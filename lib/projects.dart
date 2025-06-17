@@ -279,23 +279,9 @@ final class ValidProject implements Project {
     String newName, {
     required EditTarget editTarget,
   }) {
-    return ValidProject(
-      directory,
-      supportedPlatforms: supportedPlatforms,
-      androidManifest:
-          editTarget.includesAndroid
-              ? androidManifest?.edit(androidLabel: newName)
-              : androidManifest,
-      iosInfoPlist:
-          editTarget.includesIos
-              ? iosInfoPlist?.edit(displayName: newName)
-              : iosInfoPlist,
-      appBuildGradle: appBuildGradle,
-      iosXcodeProject: iosXcodeProject,
-      pubspecYaml: pubspecYaml,
-      iosIconImage: iosIconImage,
-      androidIconImage: androidIconImage,
-      replacementIconPath: replacementIconPath,
+    return _clone(
+      newAndroidAppName: editTarget.includesAndroid ? newName : null,
+      newIosAppName: editTarget.includesIos ? newName : null,
     );
   }
 
@@ -303,59 +289,24 @@ final class ValidProject implements Project {
     String newApplicationId, {
     required EditTarget editTarget,
   }) {
-    return ValidProject(
-      directory,
-      supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest,
-      iosInfoPlist: iosInfoPlist,
-      appBuildGradle:
-          editTarget.includesAndroid
-              ? appBuildGradle?.edit(appId: newApplicationId)
-              : appBuildGradle,
-      iosXcodeProject:
-          editTarget.includesIos
-              ? iosXcodeProject?.edit(bundleId: newApplicationId)
-              : iosXcodeProject,
-      pubspecYaml: pubspecYaml,
-      iosIconImage: iosIconImage,
-      androidIconImage: androidIconImage,
-      replacementIconPath: replacementIconPath,
+    return _clone(
+      newAndroidApplicationId:
+          editTarget.includesAndroid ? newApplicationId : null,
+      newIosApplicationId: editTarget.includesIos ? newApplicationId : null,
     );
   }
 
   ValidProject _withReplacementIconPath(String newIconPath) {
-    return ValidProject(
-      directory,
-      appBuildGradle: appBuildGradle,
-      pubspecYaml: pubspecYaml,
-      iosXcodeProject: iosXcodeProject,
-      supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest,
-      iosInfoPlist: iosInfoPlist,
-      iosIconImage: iosIconImage,
-      androidIconImage: androidIconImage,
-      replacementIconPath: newIconPath,
-    );
+    return _clone(newIconPath: newIconPath);
   }
 
   ValidProject _withNewPubspecValues({
     String? versionName,
     String? versionCode,
   }) {
-    return ValidProject(
-      directory,
-      supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest,
-      iosInfoPlist: iosInfoPlist,
-      appBuildGradle: appBuildGradle,
-      iosXcodeProject: iosXcodeProject,
-      pubspecYaml: pubspecYaml?.edit(
-        versionName: versionName,
-        versionCode: versionCode,
-      ),
-      iosIconImage: iosIconImage,
-      androidIconImage: androidIconImage,
-      replacementIconPath: replacementIconPath,
+    return _clone(
+      newPubspecVersionName: versionName,
+      newPubspecVersionNumber: versionCode,
     );
   }
 
@@ -363,20 +314,9 @@ final class ValidProject implements Project {
     String? versionName,
     String? versionCode,
   }) {
-    return ValidProject(
-      directory,
-      supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest,
-      iosInfoPlist: iosInfoPlist,
-      appBuildGradle: appBuildGradle?.edit(
-        versionName: versionName,
-        versionCode: versionCode,
-      ),
-      iosXcodeProject: iosXcodeProject,
-      androidIconImage: androidIconImage,
-      iosIconImage: iosIconImage,
-      pubspecYaml: pubspecYaml,
-      replacementIconPath: replacementIconPath,
+    return _clone(
+      newAndroidVersionName: versionName,
+      newAndroidVersionCode: versionCode,
     );
   }
 
@@ -384,20 +324,47 @@ final class ValidProject implements Project {
     String? versionName,
     String? versionNumber,
   }) {
+    return _clone(
+      newIosVersionName: versionName,
+      newIosVersionNumber: versionNumber,
+    );
+  }
+
+  ValidProject _clone({
+    String? newPubspecVersionName,
+    String? newPubspecVersionNumber,
+    String? newIosVersionName,
+    String? newIosVersionNumber,
+    String? newAndroidVersionName,
+    String? newAndroidVersionCode,
+    String? newIconPath,
+    String? newAndroidAppName,
+    String? newIosAppName,
+    String? newAndroidApplicationId,
+    String? newIosApplicationId,
+  }) {
     return ValidProject(
       directory,
       supportedPlatforms: supportedPlatforms,
-      androidManifest: androidManifest,
+      androidManifest: androidManifest?.edit(androidLabel: newAndroidAppName),
       iosInfoPlist: iosInfoPlist?.edit(
-        versionName: versionName,
-        versionNumber: versionNumber,
+        displayName: newIosAppName,
+        versionName: newIosVersionName,
+        versionNumber: newIosVersionNumber,
       ),
-      appBuildGradle: appBuildGradle,
-      iosXcodeProject: iosXcodeProject,
-      androidIconImage: androidIconImage,
+      appBuildGradle: appBuildGradle?.edit(
+        appId: newAndroidApplicationId,
+        versionName: newAndroidVersionName,
+        versionCode: newAndroidVersionCode,
+      ),
+      iosXcodeProject: iosXcodeProject?.edit(bundleId: newIosApplicationId),
+      pubspecYaml: pubspecYaml?.edit(
+        versionCode: newPubspecVersionNumber,
+        versionName: newPubspecVersionName,
+      ),
       iosIconImage: iosIconImage,
-      pubspecYaml: pubspecYaml,
-      replacementIconPath: replacementIconPath,
+      androidIconImage: androidIconImage,
+      replacementIconPath: newIconPath ?? replacementIconPath,
     );
   }
 }
